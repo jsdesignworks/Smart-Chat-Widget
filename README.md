@@ -94,7 +94,7 @@ flowchart LR
 ## Repository layout (contributors)
 
 - **All plugin code** lives under [`jsdw-ai-chat/`](jsdw-ai-chat/). WordPress should load **`jsdw-ai-chat/jsdw-ai-chat.php`** only—do not point `wp-content/plugins` at the repository root.
-- Phase deliverables and design previews live under [`docs/archive/`](docs/archive/) (not loaded by WordPress). Operational notes: [`SYSTEMS_CHECK.md`](SYSTEMS_CHECK.md).
+- Phase deliverables and static previews live under [`docs/archive/from-docs-html/`](docs/archive/from-docs-html/) (not loaded by WordPress). [`docs/archive/SOURCES_ADMIN_AUDIT.txt`](docs/archive/SOURCES_ADMIN_AUDIT.txt) is an internal sources-page audit note. Operational reference: [`SYSTEMS_CHECK.md`](SYSTEMS_CHECK.md).
 
 ---
 

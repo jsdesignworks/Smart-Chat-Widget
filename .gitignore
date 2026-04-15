@@ -29,3 +29,6 @@ Desktop.ini
 # Logs and test cache
 *.log
 .phpunit.result.cache
+
+# Local snapshots under docs (optional pre-dedupe copies)
+docs/archive/backups/
