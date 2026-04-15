@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>JSDW AI Chat — Phase 8.3.2 unread &amp; attention (preview)</title>
+	<style>
+		:root {
+			--bg: #12121a;
+			--card: #1e1e24;
+			--border: #32323e;
+			--muted: #a1a1aa;
+			--text: #fafafa;
+			--accent: #6c63ff;
+			--cyan: #0ea5e9;
+			--sidebar: #18181c;
+		}
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			padding: 28px;
+			font-family: system-ui, -apple-system, sans-serif;
+			background: var(--bg);
+			color: var(--text);
+			line-height: 1.45;
+		}
+		h1 { font-size: 1.35rem; margin: 0 0 8px; font-weight: 600; }
+		h1 .count {
+			margin-left: 8px;
+			font-weight: 600;
+			color: var(--accent);
+			font-size: 0.95em;
+		}
+		.lead { color: var(--muted); font-size: 0.9rem; max-width: 46rem; margin: 0 0 24px; }
+		.layout {
+			display: flex;
+			min-height: 420px;
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			overflow: hidden;
+			background: var(--card);
+			max-width: 900px;
+		}
+		.sidebar {
+			width: 280px;
+			min-width: 280px;
+			border-right: 1px solid var(--border);
+			background: var(--sidebar);
+			display: flex;
+			flex-direction: column;
+		}
+		.sidebar-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 12px 14px;
+			font-weight: 600;
+			font-size: 13px;
+			color: var(--muted);
+			border-bottom: 1px solid var(--border);
+		}
+		.inbox-badge {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 1.25rem;
+			height: 1.25rem;
+			padding: 0 5px;
+			border-radius: 999px;
+			font-size: 11px;
+			font-weight: 700;
+			background: var(--accent);
+			color: #fff;
+		}
+		ul.list { list-style: none; margin: 0; padding: 0; }
+		.list a {
+			display: block;
+			padding: 10px 14px;
+			text-decoration: none;
+			color: inherit;
+			border-bottom: 1px solid #2a2a32;
+			transition: background 0.12s;
+		}
+		.list a:hover { background: #25252c; }
+		.list a.unread {
+			background: rgba(108, 99, 255, 0.06);
+			border-left: 3px solid var(--accent);
+			padding-left: 11px;
+		}
+		.list a.active {
+			background: rgba(108, 99, 255, 0.12);
+			border-left: 3px solid var(--accent);
+			padding-left: 11px;
+		}
+		.title-row {
+			font-size: 13px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			flex-wrap: wrap;
+		}
+		.dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: var(--accent);
+			flex-shrink: 0;
+		}
+		.uc {
+			display: inline-flex;
+			min-width: 1.1rem;
+			height: 1.1rem;
+			padding: 0 4px;
+			border-radius: 4px;
+			font-size: 10px;
+			font-weight: 700;
+			align-items: center;
+			justify-content: center;
+			background: rgba(108, 99, 255, 0.25);
+			color: #e0ddff;
+		}
+		.live {
+			display: inline-flex;
+			padding: 1px 7px;
+			border-radius: 4px;
+			font-size: 10px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			background: rgba(14, 165, 233, 0.2);
+			color: #7dd3fc;
+			border: 1px solid rgba(14, 165, 233, 0.35);
+		}
+		.preview { font-size: 12px; color: var(--muted); margin-top: 4px; }
+		.meta { font-size: 11px; color: #71717a; margin-top: 4px; }
+		.attention { font-size: 11px; color: var(--muted); margin-top: 6px; }
+		.main {
+			flex: 1;
+			padding: 16px;
+			min-width: 0;
+		}
+		.pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+		.pill {
+			display: inline-flex;
+			padding: 2px 10px;
+			border-radius: 999px;
+			font-size: 10px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.03em;
+		}
+		.pill-open { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+		.pill-agent { background: rgba(108, 99, 255, 0.2); color: #a5b4fc; }
+		.activity { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+		.toolbar-attention { font-size: 12px; color: var(--muted); }
+		.note {
+			margin-top: 28px;
+			padding: 14px 16px;
+			border: 1px dashed var(--border);
+			border-radius: 8px;
+			font-size: 13px;
+			color: var(--muted);
+			max-width: 46rem;
+		}
+		.note strong { color: var(--text); }
+		.menu-mock {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			margin-top: 12px;
+			padding: 8px 12px;
+			background: #1e1e24;
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			font-size: 13px;
+		}
+		.bubble-wp {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 1.1rem;
+			height: 1.1rem;
+			padding: 0 5px;
+			border-radius: 999px;
+			font-size: 10px;
+			font-weight: 600;
+			background: #d63638;
+			color: #fff;
+		}
+		@media (max-width: 700px) {
+			.layout { flex-direction: column; }
+			.sidebar { width: 100%; max-height: 240px; }
+		}
+	</style>
+</head>
+<body>
+	<h1>Conversations <span class="count">(3)</span></h1>
+	<p class="lead">
+		Phase 8.3.2 preview: admin read cursor (<code>last_read_message_id_admin</code>), unread derived from visitor messages after that id,
+		attention labels, document title / inbox badge / submenu bubble — no CRM scope.
+	</p>
+
+	<div class="layout">
+		<aside class="sidebar" aria-label="Inbox list mock">
+			<div class="sidebar-head">
+				<span>Inbox</span>
+				<span class="inbox-badge">3</span>
+			</div>
+			<ul class="list">
+				<li>
+					<a class="active unread" href="#">
+						<div class="title-row">
+							<span class="dot" aria-hidden="true"></span>
+							<span class="uc">2</span>
+							<span class="live">Live</span>
+							User 42
+						</div>
+						<div class="preview">Thanks, that helped…</div>
+						<div class="meta">Today 14:02 · #108</div>
+						<div class="attention">Unread</div>
+					</a>
+				</li>
+				<li>
+					<a class="unread" href="#">
+						<div class="title-row">
+							<span class="dot" aria-hidden="true"></span>
+							Session ab3f…9c
+						</div>
+						<div class="preview">Can someone look at this?</div>
+						<div class="meta">Today 13:40 · #107</div>
+						<div class="attention">Waiting on you</div>
+					</a>
+				</li>
+				<li>
+					<a href="#">
+						<div class="title-row">#106</div>
+						<div class="preview">Sounds good.</div>
+						<div class="meta">Yesterday · #106</div>
+						<div class="attention">Waiting on visitor</div>
+					</a>
+				</li>
+			</ul>
+		</aside>
+		<section class="main" aria-label="Thread mock">
+			<div class="pill-row">
+				<span class="pill pill-open">open</span>
+				<span class="pill pill-agent">Agent connected</span>
+			</div>
+			<div class="activity">Last message from visitor</div>
+			<div class="toolbar-attention">Unread — new visitor messages since you last read this thread.</div>
+		</section>
+	</div>
+
+	<div class="menu-mock" title="WP admin submenu badge (update-plugins style)">
+		<span>AI Chat</span>
+		<span>→</span>
+		<span>Conversations</span>
+		<span class="bubble-wp">3</span>
+	</div>
+
+	<p class="note">
+		<strong>Behavior:</strong> opening a thread calls mark-read (latest message id). Polling <code>GET …/inbox-summary</code> every ~25s
+		updates the title prefix, inbox chip, row classes, and attention text; full dot/count refresh happens on navigation reload.
+		Agent reply and mark-read keep the cursor aligned so your own message does not look unread.
+	</p>
+</body>
+</html>

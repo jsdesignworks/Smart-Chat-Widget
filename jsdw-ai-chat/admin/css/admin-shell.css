@@ -1,0 +1,164 @@
+/**
+ * Phase 7.2 — App shell layout (strictly scoped).
+ *
+ * @package JSDW_AI_Chat
+ */
+
+#jsdw-design-studio-wrap {
+	--jsdw-shell-topbar-height: 50px;
+	background: var(--jsdw-color-app-bg);
+	box-sizing: border-box;
+	min-height: calc(100vh - var(--wp-admin--admin-bar--height, 32px));
+}
+
+#jsdw-design-studio-wrap *,
+#jsdw-design-studio-wrap *::before,
+#jsdw-design-studio-wrap *::after {
+	box-sizing: border-box;
+}
+
+#jsdw-design-studio-wrap .jsdw-shell {
+	display: grid;
+	grid-template-columns: 200px 1fr;
+	/* minmax(0,1fr) lets .jsdw-content / .jsdw-sidebar scroll inside the grid without clipping */
+	grid-template-rows: var(--jsdw-shell-topbar-height) minmax(0, 1fr);
+	grid-template-areas:
+		"topbar topbar"
+		"sidebar content";
+	min-height: calc(100vh - var(--wp-admin--admin-bar--height, 32px));
+	height: calc(100vh - var(--wp-admin--admin-bar--height, 32px));
+}
+
+#jsdw-design-studio-wrap .jsdw-topbar {
+	grid-area: topbar;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: var(--jsdw-shell-topbar-height);
+	min-height: var(--jsdw-shell-topbar-height);
+	padding: 0 20px;
+	background: var(--jsdw-color-surface-topbar);
+	border-bottom: 1px solid var(--jsdw-color-border-shell);
+	box-sizing: border-box;
+}
+
+#jsdw-design-studio-wrap .jsdw-topbar__brand {
+	flex: 1 1 auto;
+	min-width: 0;
+	font: var(--jsdw-type-brand);
+	color: var(--jsdw-color-text-primary);
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+#jsdw-design-studio-wrap .jsdw-topbar__actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: 0 0 auto;
+}
+
+#jsdw-design-studio-wrap .jsdw-shell-status-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 10px;
+	border-radius: var(--jsdw-radius-pill);
+	font: var(--jsdw-type-status-pill);
+	color: var(--jsdw-color-status-success);
+	background: var(--jsdw-color-surface-muted);
+	border: 1px solid var(--jsdw-color-border-card);
+}
+
+#jsdw-design-studio-wrap .jsdw-shell-mode-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 32px;
+	margin: 0;
+	padding: 0;
+	border: 1px solid var(--jsdw-color-border-card);
+	border-radius: var(--jsdw-radius-button);
+	background: var(--jsdw-color-action-secondary);
+	color: var(--jsdw-color-action-secondary-text);
+	cursor: not-allowed;
+	opacity: 0.85;
+}
+
+#jsdw-design-studio-wrap .jsdw-shell-mode-toggle .dashicons {
+	width: 20px;
+	height: 20px;
+	font-size: 20px;
+	line-height: 1;
+}
+
+#jsdw-design-studio-wrap .jsdw-sidebar {
+	grid-area: sidebar;
+	width: 200px;
+	min-width: 200px;
+	max-width: 200px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	background: var(--jsdw-color-surface-sidebar);
+	border-right: 1px solid var(--jsdw-color-border-shell);
+	padding: 12px 0 24px;
+}
+
+#jsdw-design-studio-wrap .jsdw-shell-nav__group + .jsdw-shell-nav__group {
+	margin-top: 8px;
+}
+
+#jsdw-design-studio-wrap .jsdw-shell-nav__heading {
+	padding: var(--jsdw-space-sidebar-section-padding);
+	font: var(--jsdw-type-sidebar-section);
+	color: var(--jsdw-color-text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+#jsdw-design-studio-wrap .jsdw-shell-nav__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+#jsdw-design-studio-wrap .jsdw-shell-nav__item {
+	margin: 0;
+	padding: 0;
+}
+
+#jsdw-design-studio-wrap .jsdw-shell-nav__link {
+	display: block;
+	padding: var(--jsdw-space-sidebar-item-padding-y) var(--jsdw-space-sidebar-item-padding-x);
+	margin: 0 8px;
+	border-radius: 6px;
+	font: var(--jsdw-type-sidebar-item);
+	color: var(--jsdw-color-text-sidebar-inactive);
+	text-decoration: none;
+	transition: color var(--jsdw-motion-hover) var(--jsdw-easing-standard),
+		background-color var(--jsdw-motion-hover) var(--jsdw-easing-standard);
+}
+
+#jsdw-design-studio-wrap .jsdw-shell-nav__link:hover,
+#jsdw-design-studio-wrap .jsdw-shell-nav__link:focus {
+	color: var(--jsdw-color-text-sidebar-active);
+	background: var(--jsdw-color-surface-active);
+	outline: none;
+}
+
+#jsdw-design-studio-wrap .jsdw-shell-nav__link.is-active {
+	color: var(--jsdw-color-text-sidebar-active);
+	background: var(--jsdw-color-surface-active);
+}
+
+#jsdw-design-studio-wrap .jsdw-content {
+	grid-area: content;
+	min-width: 0;
+	min-height: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	padding: 24px 26px;
+	background: var(--jsdw-color-surface-content);
+}

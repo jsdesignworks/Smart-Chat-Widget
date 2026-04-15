@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>JSDW AI Chat — Design Studio preview live-simulation hardening</title>
+	<style>
+		:root { font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1528; }
+		body { max-width: 52rem; margin: 2rem auto; padding: 0 1.25rem 3rem; }
+		h1 { font-size: 1.35rem; margin-top: 0; }
+		h2 { font-size: 1.05rem; margin-top: 2rem; border-bottom: 1px solid #e8e4f0; padding-bottom: 0.35rem; }
+		ul { padding-left: 1.25rem; }
+		code { font-size: 0.9em; background: #f4f2fa; padding: 0.12em 0.35em; border-radius: 4px; }
+		.files { background: #faf9fc; border: 1px solid #e8e4f0; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.92rem; }
+		.check { list-style: none; padding-left: 0; }
+		.check li { margin: 0.35rem 0; padding-left: 1.5rem; position: relative; }
+		.check li::before { content: '☐'; position: absolute; left: 0; opacity: 0.55; }
+		.demo { margin-top: 2rem; padding: 1.25rem; border-radius: 12px; background: linear-gradient(160deg, #f0ecff 0%, #fff 45%); border: 1px solid #ddd6f5; }
+		.demo h3 { margin: 0 0 0.75rem; font-size: 0.95rem; }
+		.demo-stage { position: relative; height: 200px; background: #fff; border-radius: 8px; border: 1px solid #e0dce8; overflow: hidden; }
+		.mock-widget { position: absolute; bottom: 12px; right: 12px; font-size: 13px; --spd: 0.35s; }
+		.mock-widget .panel {
+			position: absolute; bottom: 52px; right: 0; width: 220px; height: 120px;
+			background: #fff; border-radius: 12px; box-shadow: 0 10px 32px rgba(0,0,0,.18);
+			display: none; flex-direction: column; padding: 10px; font-size: 12px;
+		}
+		.mock-widget.is-open .panel { display: flex; animation: demoSlide var(--spd) cubic-bezier(0.2,0,0,1) forwards; }
+		@keyframes demoSlide {
+			from { opacity: 0; transform: translateY(12px) scale(0.96); }
+			to { opacity: 1; transform: translateY(0) scale(1); }
+		}
+		.mock-launcher {
+			width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
+			background: #6c63ff; color: #fff; font-size: 18px; box-shadow: 0 4px 14px rgba(108,99,255,.4);
+		}
+		.state { margin-top: 0.5rem; font-size: 11px; color: #5c5470; }
+	</style>
+</head>
+<body>
+	<h1>Design Studio preview — live-simulation hardening</h1>
+	<p>
+		This note documents alignment between the admin <strong>Design Studio</strong> preview and the
+		public widget’s open/close model, animation tokens, and typography feedback. No backend or widget intelligence
+		behavior was changed; only preview shell JS/CSS and mirrored admin copies.
+	</p>
+
+	<h2>Root causes (prior behavior)</h2>
+	<ul>
+		<li><code>wrap.className = …</code> reset the preview widget node each sync, stripping simulation classes
+			(e.g. viewport/hidden overlays) until a later pass reapplied some of them — fragile and unlike the live DOM.</li>
+		<li>The live widget hides the chat window with <code>display: none</code> when the root lacks <code>is-open</code>;
+			the preview used <code>opacity: 0</code> and <code>pointer-events: none</code>, so layout and stacking differed from production.</li>
+		<li>The launcher only forced <strong>open</strong>; production toggles open/closed on repeated clicks.</li>
+		<li>Animation speed used <code>--chat-anim-dur</code> in preview while the widget sets <code>--jsdw-anim-speed</code> for keyframed opens.</li>
+		<li>Several preview elements used fixed <code>px</code> sizes, so font-size slider changes felt subtle on title, chips, and input.</li>
+	</ul>
+
+	<h2>What improved</h2>
+	<ul>
+		<li><code>is-open</code> on <code>#jsdw-pr-widget</code> mirrors the live widget; closed panel uses <code>display: none</code>.</li>
+		<li>Position and animation classes applied with <code>classList</code> (no full <code>className</code> wipe).</li>
+		<li><code>jsdw-anim-slide|fade|pop</code> + <code>@keyframes</code> in preview CSS match the public widget’s open motion.</li>
+		<li><code>--jsdw-anim-speed</code> and derived <code>--chat-font-size-lg</code> / <code>--chat-font-size-sm</code> improve visible typography feedback.</li>
+		<li>Launcher click <strong>toggles</strong> the panel; <code>aria-expanded</code>, <code>aria-controls</code>, and <code>aria-hidden</code> on the panel.</li>
+		<li>Simulation bar (<code>#jsdw-pr-sim-state</code>) shows on/off chips for Panel, Badge, Quick replies, Typing, Timestamps, Branding, Sound.</li>
+		<li>Richer default welcome and user sample copy; user bubble can show timestamps when enabled.</li>
+		<li>Badge uses a light pulse when enabled so the toggle is obvious in preview.</li>
+		<li>Midnight theme panel shadow selector tied to <code>.is-open</code> instead of removed <code>is-closed</code> classes.</li>
+	</ul>
+
+	<h2>Files touched</h2>
+	<div class="files">
+		<ul style="margin:0">
+			<li><code>jsdw-ai-chat/admin/js/design-studio.js</code></li>
+			<li><code>jsdw-ai-chat/admin/css/design-studio.css</code></li>
+			<li><code>admin/js/design-studio.js</code> (mirror)</li>
+			<li><code>admin/css/design-studio.css</code> (mirror)</li>
+			<li><code>PREVIEW_LIVE_SIMULATION_HARDENING.html</code> (this document)</li>
+		</ul>
+	</div>
+
+	<h2>Validation checklist (WordPress admin)</h2>
+	<ul class="check">
+		<li>Launcher opens and closes the panel repeatedly; close button still closes.</li>
+		<li>Changing Open Animation (slide / fade / pop) and Animation Speed visibly affects the open transition.</li>
+		<li>Font size slider clearly moves title, messages, chips, input, and launcher label.</li>
+		<li>Toggles for badge, quick replies, typing, timestamps, branding, sound update preview and simulation chips.</li>
+		<li>Midnight (and other) themes still read correctly when the panel is open.</li>
+	</ul>
+
+	<h2>Mini demo (standalone)</h2>
+	<p class="state">Below: same idea as live widget — <code>display:none</code> when closed, <code>is-open</code> + keyframes when open. Click the circle.</p>
+	<div class="demo">
+		<h3>Mock widget</h3>
+		<div class="demo-stage">
+			<div class="mock-widget" id="demoW">
+				<div class="panel">Panel uses display:flex only when <code>.is-open</code>.</div>
+				<button type="button" class="mock-launcher" id="demoL" aria-expanded="false" aria-label="Toggle chat">💬</button>
+			</div>
+		</div>
+		<p class="state" id="demoS">State: closed</p>
+	</div>
+	<script>
+	(function () {
+		var w = document.getElementById('demoW');
+		var l = document.getElementById('demoL');
+		var s = document.getElementById('demoS');
+		if (!w || !l) return;
+		l.addEventListener('click', function () {
+			var open = !w.classList.contains('is-open');
+			w.classList.toggle('is-open', open);
+			l.setAttribute('aria-expanded', open ? 'true' : 'false');
+			s.textContent = 'State: ' + (open ? 'open (panel in layout + animation)' : 'closed (display:none)');
+		});
+	})();
+	</script>
+</body>
+</html>

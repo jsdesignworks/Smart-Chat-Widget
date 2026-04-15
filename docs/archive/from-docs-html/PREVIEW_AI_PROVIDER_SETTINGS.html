@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Preview — AI Connection &amp; Usage (JSDW AI Chat)</title>
+	<style>
+		:root {
+			--bg: #f6f4fb;
+			--card: #fff;
+			--text: #1a1528;
+			--muted: #5c5470;
+			--border: #e4dff0;
+			--pill-neutral: #e8e8ef;
+			--pill-info: #dbeafe;
+			--pill-warn: #fef3c7;
+		}
+		* { box-sizing: border-box; }
+		body {
+			font-family: system-ui, -apple-system, sans-serif;
+			line-height: 1.5;
+			color: var(--text);
+			background: var(--bg);
+			margin: 0;
+			padding: 24px 20px 48px;
+			max-width: 720px;
+			margin-left: auto;
+			margin-right: auto;
+		}
+		h1 { font-size: 1.35rem; margin: 0 0 8px; }
+		.lead { color: var(--muted); margin: 0 0 24px; font-size: 0.95rem; }
+		.card {
+			background: var(--card);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 18px 20px 22px;
+			margin-bottom: 28px;
+			box-shadow: 0 2px 12px rgba(45, 38, 64, 0.06);
+		}
+		.card h2 { margin: 0 0 6px; font-size: 1.1rem; }
+		.card-desc { margin: 0 0 16px; font-size: 0.88rem; color: var(--muted); }
+		.pill-row { margin-bottom: 10px; }
+		.pill {
+			display: inline-block;
+			padding: 5px 12px;
+			border-radius: 999px;
+			font-size: 12px;
+			font-weight: 600;
+		}
+		.pill--neutral { background: var(--pill-neutral); color: #333; }
+		.pill--info { background: var(--pill-info); color: #1e3a5f; border: 1px solid rgba(59, 130, 246, 0.25); }
+		.pill--warning { background: var(--pill-warn); color: #78350f; border: 1px solid rgba(245, 158, 11, 0.35); }
+		.detail { font-size: 0.82rem; color: var(--muted); margin: 0 0 14px; }
+		.warn-banner {
+			font-size: 0.82rem;
+			background: rgba(245, 158, 11, 0.15);
+			border: 1px solid rgba(245, 158, 11, 0.35);
+			padding: 10px 12px;
+			border-radius: 8px;
+			margin-bottom: 14px;
+			color: #78350f;
+		}
+		.row { margin-bottom: 12px; font-size: 0.88rem; }
+		.row label { display: block; font-weight: 600; margin-bottom: 4px; }
+		select, .fake-check { width: 100%; max-width: 320px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
+		.h2-states { font-size: 1rem; margin: 32px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+		.state-sample { margin-bottom: 20px; }
+		.state-sample .tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 6px; }
+		.checklist { padding-left: 1.2rem; }
+		.checklist li { margin: 6px 0; }
+		.map-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 12px; }
+		.map-table th, .map-table td { border: 1px solid var(--border); padding: 8px; text-align: left; vertical-align: top; }
+		.map-table th { background: #faf8fc; }
+		code { font-size: 0.85em; background: #eee8f7; padding: 0.1em 0.35em; border-radius: 4px; }
+	</style>
+</head>
+<body>
+	<h1>AI Connection &amp; Usage — UI preview</h1>
+	<p class="lead">Standalone mock (no WordPress). Mirrors the Settings card and status pills.</p>
+
+	<div class="card">
+		<h2>AI connection &amp; usage</h2>
+		<p class="card-desc">Answers are built from indexed site content (local-first). Optional AI would only polish phrasing for answers already formed locally — not retrieval or open-ended general chat.</p>
+		<div class="pill-row">
+			<span class="pill pill--info">Phrase path enabled by settings (stub only)</span>
+		</div>
+		<p class="detail">AI calls are not active in this version. Answers are generated locally from your content; no external API requests are made. The selected provider is not implemented yet; this is a stub-only configuration gate.</p>
+		<div class="warn-banner">OpenAI is selected for future use. Provider integration is not implemented in this version; no external API requests are sent.</div>
+		<div class="row"><label>AI features</label><label><input type="checkbox" checked disabled /> Enable AI-related settings</label></div>
+		<div class="row"><label>AI provider</label><select disabled><option>OpenAI</option></select></div>
+		<div class="row"><label>Answer mode</label><select disabled><option>Local with optional AI phrase</option></select></div>
+		<div class="row"><label>AI-assisted phrasing</label><label><input type="checkbox" checked disabled /> Allow optional phrase assist</label></div>
+	</div>
+
+	<h2 class="h2-states">Example status pills</h2>
+	<div class="state-sample"><div class="tag">disabled</div><span class="pill pill--neutral">AI features disabled</span></div>
+	<div class="state-sample"><div class="tag">no provider</div><span class="pill pill--warning">No provider selected</span></div>
+	<div class="state-sample"><div class="tag">blocked by mode</div><span class="pill pill--warning">Blocked by answer mode</span></div>
+	<div class="state-sample"><div class="tag">eligible</div><span class="pill pill--info">Phrase path enabled by settings (stub only)</span></div>
+
+	<h2 class="h2-states">Status logic (order)</h2>
+	<table class="map-table">
+		<thead><tr><th>#</th><th>Condition</th><th>Code</th><th>Severity</th></tr></thead>
+		<tbody>
+			<tr><td>1</td><td>enable_ai false</td><td>ai_disabled</td><td>neutral</td></tr>
+			<tr><td>2</td><td>provider empty</td><td>no_provider</td><td>warning</td></tr>
+			<tr><td>3</td><td>strict_local_only</td><td>blocked_by_mode</td><td>warning</td></tr>
+			<tr><td>4</td><td>phrase assist off</td><td>phrase_assist_off</td><td>info</td></tr>
+			<tr><td>5</td><td>else</td><td>eligible_stub</td><td>info + disclaimer</td></tr>
+		</tbody>
+	</table>
+
+	<h2 class="h2-states">Validation checklist</h2>
+	<ul class="checklist">
+		<li>No “connected” or “active AI” wording.</li>
+		<li>Provider whitelist: none, openai, anthropic, google.</li>
+		<li>Dashboard mirrors health <code>ai_status_summary</code>.</li>
+		<li>Public health endpoint still uses capability gate for full report.</li>
+	</ul>
+</body>
+</html>

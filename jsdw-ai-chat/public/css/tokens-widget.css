@@ -1,0 +1,75 @@
+/**
+ * Phase 7.1 — Widget design tokens (canonical --jsdw-* + --chat-* aliases).
+ * Scoped to #jsdw-ai-chat-widget only. Runtime JS may override --chat-* for saved design.
+ *
+ * @package JSDW_AI_Chat
+ */
+#jsdw-ai-chat-widget {
+	box-sizing: border-box;
+	z-index: 999999;
+
+	/* Actions (referenced below) */
+	--jsdw-color-action-primary: #6c63ff;
+
+	/* Surfaces */
+	--jsdw-color-surface-panel: #ffffff;
+	--jsdw-color-surface-bot-bubble: #f0f0f5;
+	--jsdw-color-surface-header: var(--jsdw-color-action-primary);
+	--jsdw-color-border-subtle: rgba(0, 0, 0, 0.12);
+	--jsdw-color-border-input: rgba(0, 0, 0, 0.12);
+	--jsdw-color-shadow-panel: rgba(0, 0, 0, 0.18);
+
+	/* Text */
+	--jsdw-color-text-primary: #222222;
+	--jsdw-color-text-on-primary: #ffffff;
+	--jsdw-color-text-muted: #888888;
+	--jsdw-color-text-branding: #888888;
+	--jsdw-color-focus-ring: rgba(108, 99, 255, 0.25);
+
+	/* Status / message */
+	--jsdw-color-status-success: #4caf50;
+	--jsdw-color-notification-badge: #e53935;
+	--jsdw-color-msg-error-bg: #ffebee;
+	--jsdw-color-msg-error-text: #b71c1c;
+	--jsdw-color-msg-system-bg: rgba(0, 0, 0, 0.06);
+	--jsdw-color-debug-bg: rgba(0, 0, 0, 0.04);
+	--jsdw-color-typing-dot: #888888;
+	--jsdw-color-guard-border: #e53935;
+
+	/* Motion (align naming with admin foundation) */
+	--jsdw-motion-widget-open: 0.3s;
+	--jsdw-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+	/* Backward-compatible aliases (single source: --jsdw-* ) */
+	--jsdw-anim-speed: var(--jsdw-motion-widget-open);
+	--chat-primary: var(--jsdw-color-action-primary);
+	--chat-bg: var(--jsdw-color-surface-panel);
+	--chat-bot-bubble: var(--jsdw-color-surface-bot-bubble);
+	--chat-font-family: system-ui, sans-serif;
+	--chat-font-size: 13px;
+	--chat-radius: 18px;
+	--chat-width: 360px;
+	--chat-height: 520px;
+	--chat-widget-size: 56px;
+
+	font-family: var(--chat-font-family);
+	font-size: var(--chat-font-size);
+}
+
+#jsdw-ai-chat-widget *,
+#jsdw-ai-chat-widget *::before,
+#jsdw-ai-chat-widget *::after {
+	box-sizing: border-box;
+}
+
+#jsdw-ai-chat-widget .jsdw-u-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+#jsdw-ai-chat-widget .jsdw-u-break-word {
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}

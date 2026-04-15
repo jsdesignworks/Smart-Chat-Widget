@@ -1,0 +1,9 @@
+Sources admin overhaul — pending state audit (implementation notes)
+
+1. Three independent fields use the word "pending": sources.status (rare in practice), content_processing_status (awaiting extraction), knowledge_processing_status (chunks/facts; stays pending until content is OK).
+
+2. Knowledge can look "stuck" in pending while content is not OK: this is expected ordering, not a retrieval bug.
+
+3. Operational backlog: if WP-Cron does not run, content stays pending until jobs execute; "Run queue now" runs the queue runner once and spawn_cron() nudges background processing.
+
+4. jobs.source_id: add_job() now sets the column when payload contains source_id (diagnostics / future per-source job queries).

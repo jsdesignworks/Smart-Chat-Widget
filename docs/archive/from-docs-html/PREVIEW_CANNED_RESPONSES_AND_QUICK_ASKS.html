@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>JSDW AI Chat — Response copy & Quick Ask (preview)</title>
+	<style>
+		:root {
+			--bg: #0e0e11;
+			--surface: #1a1a22;
+			--border: #32323e;
+			--text: #e8e8f0;
+			--muted: #a8a8bc;
+			--accent: #7c6af7;
+			--radius: 8px;
+			--font: "Instrument Sans", system-ui, sans-serif;
+		}
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			font-family: var(--font);
+			background: var(--bg);
+			color: var(--text);
+			line-height: 1.45;
+			padding: 24px;
+		}
+		.wrap { max-width: 920px; margin: 0 auto; }
+		h1 {
+			font-size: 1.5rem;
+			font-weight: 600;
+			letter-spacing: -0.02em;
+			margin: 0 0 8px;
+		}
+		.kicker {
+			color: var(--muted);
+			font-size: 0.94rem;
+			margin-bottom: 28px;
+		}
+		.card {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			margin-bottom: 20px;
+			overflow: hidden;
+		}
+		.card-h {
+			padding: 14px 16px;
+			border-bottom: 1px solid var(--border);
+		}
+		.card-h h2 {
+			margin: 0;
+			font-size: 0.92rem;
+			font-weight: 600;
+		}
+		.card-h p {
+			margin: 6px 0 0;
+			font-size: 0.8rem;
+			color: var(--muted);
+		}
+		.card-b { padding: 16px; }
+		fieldset.mock-fs {
+			margin: 0 0 16px;
+			padding: 12px 14px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+		}
+		fieldset.mock-fs legend {
+			padding: 0 6px;
+			font-weight: 600;
+			font-size: 0.85rem;
+		}
+		label.row {
+			display: block;
+			font-size: 0.75rem;
+			color: var(--muted);
+			margin-bottom: 4px;
+		}
+		textarea.mock {
+			width: 100%;
+			min-height: 52px;
+			padding: 8px 10px;
+			border-radius: 6px;
+			border: 1px solid var(--border);
+			background: #12121a;
+			color: var(--text);
+			font-family: inherit;
+			font-size: 0.8125rem;
+			resize: vertical;
+		}
+		.grid-qa {
+			display: grid;
+			gap: 12px;
+		}
+		.qa-row {
+			display: grid;
+			grid-template-columns: 140px 1fr;
+			align-items: center;
+			gap: 12px;
+		}
+		.qa-row label { font-size: 0.8125rem; color: var(--muted); }
+		input.mock {
+			width: 100%;
+			padding: 8px 10px;
+			border-radius: 6px;
+			border: 1px solid var(--border);
+			background: #12121a;
+			color: var(--text);
+			font-size: 0.8125rem;
+		}
+		.examples {
+			display: grid;
+			gap: 10px;
+		}
+		.pill {
+			display: inline-block;
+			font-size: 0.65rem;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: var(--accent);
+			margin-bottom: 4px;
+		}
+		.bubble {
+			background: #252530;
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 12px 14px;
+			font-size: 0.875rem;
+		}
+		.note {
+			font-size: 0.75rem;
+			color: var(--muted);
+			margin-top: 20px;
+			padding-top: 16px;
+			border-top: 1px solid var(--border);
+		}
+	</style>
+</head>
+<body>
+	<div class="wrap">
+		<h1>Response copy & Quick Ask (visual preview)</h1>
+		<p class="kicker">Standalone mock for JSDW AI Chat plugin admin. Not connected to WordPress.</p>
+
+		<div class="card">
+			<div class="card-h">
+				<h2>Response copy</h2>
+				<p>Fallback messages by situation and tone (Concise / Neutral / Friendly). Blank fields use built-in defaults.</p>
+			</div>
+			<div class="card-b">
+				<fieldset class="mock-fs">
+					<legend>No match</legend>
+					<label class="row">Concise</label>
+					<textarea class="mock" readonly>I couldn’t find a clear answer to that here.</textarea>
+					<label class="row" style="margin-top:10px">Neutral</label>
+					<textarea class="mock" readonly>I couldn’t find a clear answer to that in the current website content.</textarea>
+					<label class="row" style="margin-top:10px">Friendly</label>
+					<textarea class="mock" readonly>I’m not seeing a clear answer for that in the website content right now.</textarea>
+				</fieldset>
+				<fieldset class="mock-fs">
+					<legend>Low confidence</legend>
+					<label class="row">Concise</label>
+					<textarea class="mock" readonly>I found something related, but not enough to answer confidently.</textarea>
+				</fieldset>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="card-h">
+				<h2>Quick Ask buttons</h2>
+				<p>Same option as Design Studio: <code style="color:#c4b5fd">widget_design.quickReplies</code></p>
+			</div>
+			<div class="card-b">
+				<div class="grid-qa">
+					<div class="qa-row"><label>Quick Ask 1</label><input class="mock" type="text" value="📦 Track my order" readonly /></div>
+					<div class="qa-row"><label>Quick Ask 2</label><input class="mock" type="text" value="💬 Talk to support" readonly /></div>
+					<div class="qa-row"><label>Quick Ask 3</label><input class="mock" type="text" value="📋 View FAQ" readonly /></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="card-h">
+				<h2>Example fallback output (by tone)</h2>
+				<p>What visitors may see when no match is found — driven by Answer style in Settings.</p>
+			</div>
+			<div class="card-b examples">
+				<div>
+					<span class="pill">Concise</span>
+					<div class="bubble">I couldn’t find a clear answer to that here.</div>
+				</div>
+				<div>
+					<span class="pill">Neutral</span>
+					<div class="bubble">I couldn’t find a clear answer to that in the current website content.</div>
+				</div>
+				<div>
+					<span class="pill">Friendly</span>
+					<div class="bubble">I’m not seeing a clear answer for that in the website content right now.</div>
+				</div>
+			</div>
+		</div>
+
+		<p class="note">Production UI lives under AI Chat Widget → Settings. Canned copy is stored in <code style="color:#c4b5fd">chat.canned_responses</code>; Quick Ask labels persist in <code style="color:#c4b5fd">widget_design.quickReplies</code> and load in the widget and Design Studio preview.</p>
+	</div>
+</body>
+</html>

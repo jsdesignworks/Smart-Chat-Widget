@@ -1,0 +1,14 @@
+---
+description: After routine plugin changes, build the distribution zip; skip only for large refactors
+alwaysApply: true
+---
+
+# JSDW AI Chat — packaging after changes
+
+- After completing **non-major** work on the WordPress plugin (bugfixes, small features, security tweaks, settings changes), **run** the packaging script from the repo root so `dist/` stays current:
+
+  `bash scripts/package-plugin.sh`
+
+- Treat as **major** (packaging optional until the end): large refactors, multi-phase redesigns, or changes that intentionally span many sessions before release.
+
+- The script zips [`jsdw-ai-chat/`](jsdw-ai-chat/) with dev-only files excluded (`*.md`, `PHASE*`, `PREVIEW*`, `ADMIN_UX*` at plugin root). Output: `dist/jsdw-ai-chat-<Version>.zip` (version from the plugin header).

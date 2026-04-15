@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Phase 8.1 — Design Studio preview (standalone)</title>
+	<style>
+		:root {
+			--p81-bg: #f4f2fb;
+			--p81-accent: #6c63ff;
+			--p81-text: #2d2640;
+			--p81-muted: rgba(45, 38, 64, 0.55);
+		}
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			font-family: system-ui, -apple-system, sans-serif;
+			background: var(--p81-bg);
+			color: var(--p81-text);
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+		}
+		header {
+			padding: 16px 24px;
+			background: #fff;
+			border-bottom: 1px solid rgba(124, 106, 247, 0.15);
+		}
+		header h1 { margin: 0 0 6px; font-size: 18px; }
+		header p { margin: 0; font-size: 13px; color: var(--p81-muted); }
+		.layout { display: flex; flex: 1; min-height: 0; }
+		.sidebar {
+			width: 320px;
+			padding: 16px;
+			background: #fff;
+			border-right: 1px solid rgba(124, 106, 247, 0.12);
+			overflow: auto;
+		}
+		.sidebar h2 { font-size: 11px; margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--p81-muted); }
+		.sidebar h2:first-child { margin-top: 0; }
+		label { display: block; font-size: 12px; margin-bottom: 4px; }
+		input[type="text"], select {
+			width: 100%;
+			padding: 8px 10px;
+			border: 1px solid #ddd;
+			border-radius: 6px;
+			margin-bottom: 10px;
+			font-size: 13px;
+		}
+		.row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+		.preview-wrap {
+			flex: 1;
+			padding: 20px;
+			display: flex;
+			align-items: flex-start;
+			justify-content: center;
+			background-image:
+				linear-gradient(rgba(124, 106, 247, 0.04) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(124, 106, 247, 0.04) 1px, transparent 1px);
+			background-size: 24px 24px;
+		}
+		.preview-col { width: 100%; max-width: 640px; }
+		.preview-kicker {
+			margin: 0 0 10px;
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+			color: var(--p81-muted);
+		}
+		.browser {
+			width: 100%;
+			background: #fff;
+			border-radius: 12px;
+			box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+			border: 1px solid rgba(0,0,0,0.06);
+			position: relative;
+			overflow: hidden;
+			transition: max-width 0.35s ease, opacity 0.3s ease, box-shadow 0.25s ease, border 0.25s ease;
+		}
+		.browser.sim-narrow {
+			max-width: 420px;
+			margin-left: auto;
+			margin-right: auto;
+			border-left: 3px solid rgba(108, 99, 255, 0.42);
+		}
+		.browser.sim-wide {
+			border-top: 3px solid rgba(46, 125, 98, 0.35);
+		}
+		.browser.sim-both {
+			box-shadow: 0 4px 24px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(108, 99, 255, 0.14);
+		}
+		.browser.sim-hidden {
+			opacity: 0.88;
+			outline: 2px dashed rgba(108, 99, 255, 0.35);
+			outline-offset: -1px;
+		}
+		.browser.sim-hidden::after {
+			content: 'No matching viewport · preview';
+			position: absolute;
+			bottom: 10px;
+			left: 50%;
+			transform: translateX(-50%);
+			z-index: 3;
+			font-size: 10px;
+			font-weight: 600;
+			padding: 5px 12px;
+			border-radius: 999px;
+			background: rgba(45, 38, 64, 0.88);
+			color: #fff;
+			pointer-events: none;
+		}
+		.chrome {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 10px 14px;
+			background: #eceaf5;
+			border-bottom: 1px solid #ddd;
+			font-size: 12px;
+		}
+		.dots span {
+			display: inline-block;
+			width: 10px; height: 10px;
+			border-radius: 50%;
+			margin-right: 4px;
+			background: #ccc;
+		}
+		.dots span:nth-child(1) { background: #ff5f57; }
+		.dots span:nth-child(2) { background: #febc2e; }
+		.dots span:nth-child(3) { background: #28c840; }
+		.url { flex: 1; text-align: center; background: #fff; padding: 4px 8px; border-radius: 4px; }
+		.browser.sim-loggedin .url::after {
+			content: ' · signed in';
+			font-size: 10px;
+			opacity: 0.82;
+		}
+		.fake {
+			position: relative;
+			min-height: 300px;
+			padding: 20px;
+			background: linear-gradient(180deg, rgba(124, 106, 247, 0.04) 0%, transparent 42%), #faf9ff;
+		}
+		.sim-notes {
+			position: absolute;
+			top: 8px;
+			left: 50%;
+			transform: translateX(-50%);
+			z-index: 12;
+			font-size: 10px;
+			pointer-events: none;
+			max-width: calc(100% - 24px);
+			text-align: center;
+		}
+		.sim-notes:not(:empty) {
+			padding: 5px 12px;
+			border-radius: 999px;
+			background: rgba(108, 99, 255, 0.1);
+			border: 1px solid rgba(108, 99, 255, 0.18);
+			font-weight: 600;
+			color: rgba(55, 48, 74, 0.85);
+		}
+		.pr-root {
+			position: absolute;
+			inset: 0;
+			pointer-events: none;
+			z-index: 2;
+		}
+		.pr-widget {
+			--chat-primary: var(--p81-accent);
+			--chat-bg: #fff;
+			--chat-bot-bubble: #f0f0f5;
+			--chat-font-size: 13px;
+			--chat-radius: 18px;
+			--chat-width: 300px;
+			--chat-height: 400px;
+			--chat-widget-size: 52px;
+			--chat-anim-dur: 0.3s;
+			position: absolute;
+			bottom: 12px;
+			right: 12px;
+			font-size: var(--chat-font-size);
+			pointer-events: auto;
+			z-index: 10;
+		}
+		.pr-widget[data-preview-theme="midnight"] {
+			--chat-bg: #1a1a2e;
+			--chat-bot-bubble: #16213e;
+			--chat-primary: #e94560;
+		}
+		.pr-panel {
+			position: absolute;
+			bottom: calc(var(--chat-widget-size) + 10px);
+			right: 0;
+			width: var(--chat-width);
+			max-width: calc(100% - 16px);
+			height: var(--chat-height);
+			max-height: 65%;
+			background: var(--chat-bg);
+			border-radius: var(--chat-radius);
+			box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+			transition: opacity var(--chat-anim-dur) ease, transform var(--chat-anim-dur) ease, box-shadow var(--chat-anim-dur) ease;
+		}
+		.pr-panel.is-closed {
+			opacity: 0;
+			pointer-events: none;
+			transform: translateY(14px) scale(0.97);
+			transform-origin: bottom center;
+		}
+		.pr-panel.panel-open:not(.is-closed) {
+			box-shadow: 0 16px 48px rgba(0,0,0,0.24);
+		}
+		.pr-widget[data-preview-theme="midnight"] .pr-panel.panel-open:not(.is-closed) {
+			box-shadow: 0 18px 56px rgba(0,0,0,0.55);
+		}
+		.behave-hint {
+			font-size: 10px;
+			padding: 8px 12px;
+			color: rgba(45, 38, 64, 0.72);
+			border-bottom: 1px solid rgba(0,0,0,0.06);
+			background: rgba(124, 106, 247, 0.06);
+			flex-shrink: 0;
+		}
+		.pr-widget[data-preview-theme="midnight"] .behave-hint {
+			background: rgba(255,255,255,0.06);
+			color: rgba(255,255,255,0.75);
+			border-bottom-color: rgba(255,255,255,0.08);
+		}
+		.pr-head {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 12px 14px;
+			background: var(--chat-primary);
+			color: #fff;
+			border-radius: var(--chat-radius) var(--chat-radius) 0 0;
+		}
+		.pr-head button.close {
+			margin-left: auto;
+			border: none;
+			background: transparent;
+			color: #fff;
+			font-size: 20px;
+			cursor: pointer;
+			line-height: 1;
+			border-radius: 8px;
+			padding: 4px 8px;
+			transition: background 0.18s ease;
+		}
+		.pr-head button.close:hover { background: rgba(255,255,255,0.18); }
+		.sound { font-size: 0.92em; opacity: 0.85; }
+		.sound.on { opacity: 1; font-weight: 600; }
+		.sound.off { opacity: 0.65; font-style: italic; }
+		.pr-msgs {
+			flex: 1;
+			overflow: auto;
+			padding: 12px 14px;
+			font-size: 12px;
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		}
+		.bubble {
+			padding: 10px 14px;
+			border-radius: 12px;
+			max-width: 92%;
+			line-height: 1.45;
+		}
+		.bubble.bot { background: var(--chat-bot-bubble); align-self: flex-start; color: #2d2640; }
+		.pr-widget[data-preview-theme="midnight"] .bubble.bot { color: #e8e8f0; }
+		.bubble.user { background: var(--chat-primary); color: #fff; margin-left: auto; }
+		.msg-time {
+			display: inline-block;
+			font-size: 0.72em;
+			opacity: 0.72;
+			margin-top: 6px;
+			padding: 3px 8px;
+			border-radius: 999px;
+			background: rgba(0,0,0,0.06);
+		}
+		.typing {
+			display: flex;
+			gap: 5px;
+			padding: 10px 14px;
+			align-self: flex-start;
+			background: var(--chat-bot-bubble);
+			border-radius: 12px;
+			border: 1px solid rgba(0,0,0,0.05);
+		}
+		.typing.visible { box-shadow: 0 0 0 1px rgba(108, 99, 255, 0.12); }
+		.typing span {
+			width: 6px; height: 6px;
+			border-radius: 50%;
+			background: #888;
+			animation: p81dot 1s infinite ease-in-out;
+		}
+		.typing span:nth-child(2) { animation-delay: 0.15s; }
+		.typing span:nth-child(3) { animation-delay: 0.3s; }
+		@keyframes p81dot {
+			0%, 80%, 100% { opacity: 0.4; }
+			40% { opacity: 1; }
+		}
+		.quick { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 14px 12px; }
+		.chip {
+			border: 1px solid var(--chat-primary);
+			color: var(--chat-primary);
+			background: rgba(108, 99, 255, 0.06);
+			border-radius: 999px;
+			padding: 6px 12px;
+			font-size: 12px;
+		}
+		.pr-input {
+			padding: 12px 14px;
+			border-top: 1px solid rgba(0,0,0,0.06);
+			display: flex;
+			gap: 8px;
+		}
+		.pr-input input {
+			flex: 1;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			padding: 8px;
+			font-size: 12px;
+		}
+		.brand {
+			text-align: center;
+			font-size: 11px;
+			color: #666;
+			padding: 8px 12px 12px;
+		}
+		.launcher {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			width: var(--chat-widget-size);
+			height: var(--chat-widget-size);
+			border-radius: 50%;
+			border: none;
+			background: var(--chat-primary);
+			color: #fff;
+			font-size: 22px;
+			cursor: pointer;
+			box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 4px;
+			padding: 0 8px;
+			transition: transform 0.22s ease, box-shadow 0.22s ease;
+		}
+		.launcher:hover { transform: scale(1.05); box-shadow: 0 6px 22px rgba(0,0,0,0.26); }
+		.launcher:active { transform: scale(0.97); }
+		.launcher.has-label { width: auto; min-width: var(--chat-widget-size); border-radius: 28px; padding: 0 14px; }
+		.badge {
+			position: absolute;
+			top: 2px;
+			right: 2px;
+			min-width: 16px;
+			height: 16px;
+			border-radius: 8px;
+			background: #e11d48;
+			color: #fff;
+			font-size: 10px;
+			line-height: 16px;
+			text-align: center;
+			transition: transform 0.2s ease, box-shadow 0.2s ease;
+		}
+		.badge.active {
+			box-shadow: 0 0 0 2px rgba(255,255,255,0.95), 0 2px 8px rgba(0,0,0,0.25);
+			transform: scale(1.06);
+		}
+		.pr-widget.sim-blocked::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: rgba(15, 15, 25, 0.35);
+			border-radius: 12px;
+			z-index: 4;
+			pointer-events: none;
+		}
+		.pr-widget.sim-blocked::after {
+			content: 'Hidden on selected pages · preview';
+			position: absolute;
+			bottom: 50%;
+			left: 50%;
+			transform: translate(-50%, 50%);
+			z-index: 5;
+			font-size: 11px;
+			font-weight: 600;
+			color: #fff;
+			padding: 6px 12px;
+			border-radius: 999px;
+			background: rgba(15, 15, 25, 0.65);
+			pointer-events: none;
+			white-space: nowrap;
+		}
+		.pr-widget.sim-hidden-viewport {
+			opacity: 0.35;
+			filter: grayscale(0.9);
+		}
+		.note {
+			font-size: 11px;
+			color: var(--p81-muted);
+			margin-top: 12px;
+			max-width: 640px;
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<h1>Phase 8.1 — Configurator preview (standalone)</h1>
+		<p>Polished mock: one <code>previewState</code> drives the preview; CSS matches Design Studio Phase 8.1 treatment (no external libraries).</p>
+	</header>
+	<div class="layout">
+		<div class="sidebar">
+			<h2>Content</h2>
+			<label for="launcherLabel">Launcher label</label>
+			<input type="text" id="launcherLabel" placeholder="Chat" />
+			<label for="botName">Bot name</label>
+			<input type="text" id="botName" value="Aria" />
+			<label for="welcome">Welcome</label>
+			<input type="text" id="welcome" value="Hi! How can we help?" />
+			<label for="placeholder">Placeholder</label>
+			<input type="text" id="placeholder" value="Type a message…" />
+			<h2>Appearance</h2>
+			<div class="row">
+				<input type="checkbox" id="chkMidnight" />
+				<label for="chkMidnight" style="margin:0">Midnight preset (preview)</label>
+			</div>
+			<h2>Toggles</h2>
+			<div class="row">
+				<input type="checkbox" id="chkBadge" checked />
+				<label for="chkBadge" style="margin:0">Badge</label>
+			</div>
+			<div class="row">
+				<input type="checkbox" id="chkSound" checked />
+				<label for="chkSound" style="margin:0">Sound on</label>
+			</div>
+			<div class="row">
+				<input type="checkbox" id="chkTyping" checked />
+				<label for="chkTyping" style="margin:0">Typing indicator</label>
+			</div>
+			<div class="row">
+				<input type="checkbox" id="chkTime" checked />
+				<label for="chkTime" style="margin:0">Timestamps</label>
+			</div>
+			<div class="row">
+				<input type="checkbox" id="chkBrand" checked />
+				<label for="chkBrand" style="margin:0">Powered by branding</label>
+			</div>
+			<div class="row">
+				<input type="checkbox" id="chkQuick" checked />
+				<label for="chkQuick" style="margin:0">Quick replies</label>
+			</div>
+			<h2>Simulation</h2>
+			<label for="viewportSim">Viewport</label>
+			<select id="viewportSim">
+				<option value="both">Mobile + desktop</option>
+				<option value="narrow">Mobile only</option>
+				<option value="wide">Desktop only</option>
+				<option value="hidden">Hidden (no match)</option>
+			</select>
+			<div class="row">
+				<input type="checkbox" id="chkLogged" />
+				<label for="chkLogged" style="margin:0">Signed-in URL hint</label>
+			</div>
+			<div class="row">
+				<input type="checkbox" id="chkBlocked" />
+				<label for="chkBlocked" style="margin:0">Hide on pages (overlay)</label>
+			</div>
+			<h2>Behavior</h2>
+			<div class="row">
+				<input type="checkbox" id="chkOpen" checked />
+				<label for="chkOpen" style="margin:0">Panel open initially</label>
+			</div>
+			<label for="openTr">Open trigger (preview hint)</label>
+			<select id="openTr">
+				<option value="page-load">On page load</option>
+				<option value="scroll-50">Scroll 50%</option>
+				<option value="button-only">Launcher only</option>
+			</select>
+		</div>
+		<div class="preview-wrap">
+			<div class="preview-col">
+				<p class="preview-kicker">Configurator preview</p>
+				<div class="browser sim-both" id="browser">
+					<div class="sim-notes" id="simNotes"></div>
+					<div class="chrome">
+						<span class="dots"><span></span><span></span><span></span></span>
+						<span class="url" id="urlBar">yoursite.com</span>
+					</div>
+					<div class="fake">
+						<p style="margin:0 0 8px;font-size:12px;color:#999;">Fake page content…</p>
+						<div class="pr-root" id="prRoot"></div>
+					</div>
+				</div>
+				<p class="note">Local preview only — no chat requests. Open/close with launcher and ×. Simulation chips mirror wp-admin Design Studio Phase 8.1.</p>
+			</div>
+		</div>
+	</div>
+	<script>
+(function () {
+	var state = {
+		design: {
+			botName: 'Aria',
+			welcomeMessage: 'Hi! How can we help?',
+			inputPlaceholder: 'Type a message…',
+			widgetIcon: '💬',
+			primaryColor: '#6c63ff',
+			showBadge: true,
+			showSound: true,
+			showTyping: true,
+			showTimestamps: true,
+			showBranding: true,
+			showQuick: true,
+			defaultState: 'open',
+			openTrigger: 'page-load',
+			viewport: 'both',
+			loggedIn: false,
+			blocked: false
+		},
+		widgetUi: { launcher_label: '' },
+		session: { panelOpen: true }
+	};
+
+	function el(id) { return document.getElementById(id); }
+
+	function buildPreviewDOM() {
+		el('prRoot').innerHTML =
+			'<div class="pr-widget" id="prWidget">' +
+			'<div class="pr-panel panel-open" id="prPanel">' +
+			'<div class="pr-head">' +
+			'<span id="prAvatar">🤖</span>' +
+			'<div style="flex:1;min-width:0">' +
+			'<div style="font-weight:700" id="prTitle"></div>' +
+			'<div style="font-size:0.85em;opacity:0.95"><span>Online</span> <span class="sound" id="prSound"></span></div></div>' +
+			'<button type="button" class="close" id="prClose" aria-label="Close">×</button></div>' +
+			'<div class="behave-hint" id="prBehave"></div>' +
+			'<div class="pr-msgs" id="prMsgs">' +
+			'<div class="bubble bot" id="prWelcome"></div>' +
+			'<div class="bubble user">Thanks!</div>' +
+			'<div class="typing" id="prTyping" style="display:none"><span></span><span></span><span></span></div></div>' +
+			'<div class="quick" id="prQuick"></div>' +
+			'<div class="pr-input"><input type="text" id="prInp" readonly /></div>' +
+			'<div class="brand" id="prBrand">Powered by JSDW AI Chat</div></div>' +
+			'<button type="button" class="launcher" id="prLaunch"><span id="prIco">💬</span> <span id="prLab"></span><span class="badge" id="prBadge" style="display:none">1</span></button></div>';
+		el('prLaunch').addEventListener('click', function (e) {
+			e.preventDefault();
+			state.session.panelOpen = true;
+			render();
+		});
+		el('prClose').addEventListener('click', function (e) {
+			e.preventDefault();
+			state.session.panelOpen = false;
+			render();
+		});
+	}
+
+	function behaveText() {
+		var d = state.design;
+		var parts = [];
+		if (d.openTrigger !== 'page-load') {
+			var map = { 'scroll-50': 'Scroll 50%', 'button-only': 'Launcher only', 'exit-intent': 'Exit intent', 'time-delay': 'Time delay' };
+			var lbl = map[d.openTrigger] || d.openTrigger.replace(/-/g, ' ');
+			parts.push('Opens: ' + lbl + ' · preview');
+		}
+		return parts.join(' · ');
+	}
+
+	function render() {
+		var d = state.design;
+		var wu = state.widgetUi;
+		var sess = state.session;
+		var panel = el('prPanel');
+		var widget = el('prWidget');
+		var browser = el('browser');
+		widget.style.setProperty('--chat-primary', d.primaryColor);
+		if (el('chkMidnight').checked) {
+			widget.setAttribute('data-preview-theme', 'midnight');
+		} else {
+			widget.removeAttribute('data-preview-theme');
+		}
+		if (sess.panelOpen) {
+			panel.classList.remove('is-closed');
+			panel.classList.add('panel-open');
+		} else {
+			panel.classList.add('is-closed');
+			panel.classList.remove('panel-open');
+		}
+		el('prTitle').textContent = d.botName;
+		var welcome = el('prWelcome');
+		welcome.textContent = d.welcomeMessage;
+		var tEl = welcome.querySelector('.msg-time');
+		if (tEl) tEl.remove();
+		if (d.showTimestamps) {
+			var mt = document.createElement('div');
+			mt.className = 'msg-time';
+			mt.textContent = 'now';
+			welcome.appendChild(mt);
+		}
+		el('prInp').placeholder = d.inputPlaceholder;
+		el('prIco').textContent = d.widgetIcon;
+		var lab = String(wu.launcher_label || '').trim();
+		el('prLab').textContent = lab;
+		el('prLaunch').classList.toggle('has-label', !!lab);
+		el('prBadge').style.display = d.showBadge ? '' : 'none';
+		el('prBadge').classList.toggle('active', !!d.showBadge);
+		var snd = el('prSound');
+		snd.textContent = d.showSound ? ' · Sound on' : ' · Muted';
+		snd.classList.toggle('on', !!d.showSound);
+		snd.classList.toggle('off', !d.showSound);
+		var typing = el('prTyping');
+		typing.style.display = d.showTyping ? 'flex' : 'none';
+		typing.classList.toggle('visible', !!d.showTyping);
+		var brand = el('prBrand');
+		brand.style.display = d.showBranding ? '' : 'none';
+		var quick = el('prQuick');
+		quick.innerHTML = '';
+		if (d.showQuick) {
+			['Hello', 'Pricing', 'Support'].forEach(function (t) {
+				var s = document.createElement('span');
+				s.className = 'chip';
+				s.textContent = t;
+				quick.appendChild(s);
+			});
+		}
+		var bh = el('prBehave');
+		var bt = behaveText();
+		bh.textContent = bt;
+		bh.style.display = bt ? '' : 'none';
+		browser.className = 'browser';
+		if (d.viewport === 'narrow') browser.classList.add('sim-narrow');
+		else if (d.viewport === 'wide') browser.classList.add('sim-wide');
+		else if (d.viewport === 'both') browser.classList.add('sim-both');
+		else if (d.viewport === 'hidden') browser.classList.add('sim-hidden');
+		browser.classList.toggle('sim-loggedin', !!d.loggedIn);
+		widget.classList.toggle('sim-blocked', !!d.blocked);
+		widget.classList.toggle('sim-hidden-viewport', d.viewport === 'hidden');
+		var notes = el('simNotes');
+		notes.textContent = d.loggedIn ? 'Signed-in visitors only · preview' : '';
+	}
+
+	function wireSidebar() {
+		function pull() {
+			state.widgetUi.launcher_label = el('launcherLabel').value;
+			state.design.botName = el('botName').value;
+			state.design.welcomeMessage = el('welcome').value;
+			state.design.inputPlaceholder = el('placeholder').value;
+			state.design.showBadge = el('chkBadge').checked;
+			state.design.showSound = el('chkSound').checked;
+			state.design.showTyping = el('chkTyping').checked;
+			state.design.showTimestamps = el('chkTime').checked;
+			state.design.showBranding = el('chkBrand').checked;
+			state.design.showQuick = el('chkQuick').checked;
+			state.design.defaultState = el('chkOpen').checked ? 'open' : 'closed';
+			state.design.openTrigger = el('openTr').value;
+			state.design.viewport = el('viewportSim').value;
+			state.design.loggedIn = el('chkLogged').checked;
+			state.design.blocked = el('chkBlocked').checked;
+			state.session.panelOpen = state.design.defaultState === 'open';
+			if (el('chkMidnight').checked) {
+				state.design.primaryColor = '#e94560';
+			} else {
+				state.design.primaryColor = '#6c63ff';
+			}
+			render();
+		}
+		['launcherLabel', 'botName', 'welcome', 'placeholder', 'viewportSim', 'openTr'].forEach(function (id) {
+			el(id).addEventListener('input', pull);
+			el(id).addEventListener('change', pull);
+		});
+		['chkBadge', 'chkOpen', 'chkSound', 'chkTyping', 'chkTime', 'chkBrand', 'chkQuick', 'chkMidnight', 'chkLogged', 'chkBlocked'].forEach(function (id) {
+			el(id).addEventListener('change', pull);
+		});
+		el('launcherLabel').value = state.widgetUi.launcher_label;
+	}
+
+	buildPreviewDOM();
+	wireSidebar();
+	render();
+})();
+	</script>
+</body>
+</html>

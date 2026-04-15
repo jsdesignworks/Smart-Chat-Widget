@@ -1,0 +1,263 @@
+/**
+ * Sources registry: responsive table and management layout.
+ * Scoped under body.jsdw-ai-chat-admin.
+ *
+ * @package JSDW_AI_Chat
+ */
+
+body.jsdw-ai-chat-admin .jsdw-sources-page {
+	max-width: 100%;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-summary {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 12px;
+	margin: 0 0 20px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 12px;
+	align-items: center;
+	margin: 0 0 16px;
+	padding: 12px 14px;
+	border: 1px solid var(--jsdw-color-border-card, #32323e);
+	border-radius: 8px;
+	background: var(--jsdw-color-surface-elevated, #1e1e24);
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-toolbar form {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-filters {
+	margin: 0 0 16px;
+	padding: 12px 14px;
+	border: 1px solid var(--jsdw-color-border-card, #32323e);
+	border-radius: 8px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-filters .jsdw-sources-filters__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 10px 14px;
+	align-items: end;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-filters label {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	font-size: 0.8125rem;
+	font-weight: 500;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-filters select,
+body.jsdw-ai-chat-admin .jsdw-sources-filters input[type="text"] {
+	max-width: 100%;
+}
+
+body.jsdw-ai-chat-admin .jsdw-table-scroll {
+	max-width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	border: 1px solid var(--jsdw-color-border-card, #32323e);
+	border-radius: 8px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table {
+	width: 100%;
+	min-width: 720px;
+	border-collapse: collapse;
+	table-layout: fixed;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table th,
+body.jsdw-ai-chat-admin .jsdw-sources-table td {
+	padding: 10px 12px;
+	vertical-align: top;
+	text-align: left;
+	font-size: 0.8125rem;
+	line-height: 1.45;
+	word-wrap: break-word;
+	overflow-wrap: anywhere;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table thead th {
+	font-weight: 600;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	color: var(--jsdw-color-text-muted, #9b9ba8);
+	border-bottom: 1px solid var(--jsdw-color-border-card, #32323e);
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table tbody tr:nth-child(even) {
+	background: rgba(255, 255, 255, 0.02);
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table .jsdw-col-source {
+	width: 22%;
+	min-width: 140px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table .jsdw-col-pipeline {
+	width: 30%;
+	min-width: 200px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table .jsdw-col-vis {
+	width: 12%;
+	min-width: 90px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table .jsdw-col-counts {
+	width: 10%;
+	min-width: 72px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table .jsdw-col-activity {
+	width: 14%;
+	min-width: 100px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table .jsdw-col-actions {
+	width: 12%;
+	min-width: 108px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-source-title {
+	font-weight: 600;
+	margin: 0 0 4px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+body.jsdw-ai-chat-admin .jsdw-source-meta {
+	font-size: 0.75rem;
+	color: var(--jsdw-color-text-muted, #9b9ba8);
+	margin: 0;
+}
+
+body.jsdw-ai-chat-admin .jsdw-source-url {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.75rem;
+	color: var(--jsdw-color-text-dim, #7a7a88);
+	max-width: 100%;
+}
+
+body.jsdw-ai-chat-admin .jsdw-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	margin: 0 4px 4px 0;
+	border-radius: 6px;
+	font-size: 0.6875rem;
+	font-weight: 600;
+	line-height: 1.35;
+	background: rgba(139, 92, 246, 0.15);
+	color: var(--jsdw-color-text, #e8e8ed);
+}
+
+body.jsdw-ai-chat-admin .jsdw-badge--ok {
+	background: rgba(34, 197, 94, 0.18);
+}
+
+body.jsdw-ai-chat-admin .jsdw-badge--warn {
+	background: rgba(234, 179, 8, 0.2);
+}
+
+body.jsdw-ai-chat-admin .jsdw-badge--err {
+	background: rgba(239, 68, 68, 0.2);
+}
+
+body.jsdw-ai-chat-admin .jsdw-badge--neutral {
+	background: rgba(148, 163, 184, 0.15);
+}
+
+body.jsdw-ai-chat-admin .jsdw-pipeline-line {
+	margin: 6px 0 0;
+	font-size: 0.75rem;
+	color: var(--jsdw-color-text-muted, #9b9ba8);
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-actions-cell form {
+	margin: 0 0 6px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-actions-cell .button:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-details {
+	margin: 8px 0 0;
+	font-size: 0.75rem;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-details summary {
+	cursor: pointer;
+	color: var(--jsdw-color-accent, #a78bfa);
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-note {
+	margin: 12px 0 0;
+	font-size: 0.8125rem;
+	color: var(--jsdw-color-text-muted, #9b9ba8);
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-actions-card {
+	margin: 0 0 20px;
+	padding: 14px 16px;
+	border: 1px solid var(--jsdw-color-border-card, #32323e);
+	border-radius: 8px;
+	background: var(--jsdw-color-surface-elevated, #1e1e24);
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-actions-card__title {
+	margin: 0 0 6px;
+	font-size: 1rem;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-actions-card__desc {
+	margin: 0 0 12px;
+	font-size: 0.8125rem;
+	color: var(--jsdw-color-text-muted, #9b9ba8);
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-actions-card .jsdw-sources-toolbar {
+	margin: 0;
+}
+
+body.jsdw-ai-chat-admin .jsdw-table-scroll--sources {
+	margin-top: 8px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table--simple {
+	min-width: 560px;
+	table-layout: auto;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-table-heading {
+	margin: 20px 0 8px;
+	font-size: 1rem;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-inline-form {
+	display: inline-block;
+	margin: 0 4px 4px 0;
+	vertical-align: middle;
+}
+
+body.jsdw-ai-chat-admin .jsdw-sources-actions-cell .button-small {
+	margin-right: 4px;
+	margin-bottom: 4px;
+}

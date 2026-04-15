@@ -1,0 +1,31 @@
+# Build output (regenerate with: bash scripts/package-plugin.sh)
+/dist/
+
+# Packaged / loose zip artifacts (use scripts/package-plugin.sh)
+*.zip
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+
+# Local WordPress config patterns (if copied near the repo)
+wp-config-local.php
+
+# Dependencies (future Composer / npm)
+/vendor/
+/node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors / IDEs
+.idea/
+*.swp
+*~
+
+# Logs and test cache
+*.log
+.phpunit.result.cache

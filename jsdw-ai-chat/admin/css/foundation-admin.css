@@ -1,0 +1,341 @@
+/**
+ * Phase 7.1 — Admin CSS foundation (typography, spacing, motion, utilities).
+ * All rules scoped under body.jsdw-ai-chat-admin.
+ *
+ * @package JSDW_AI_Chat
+ */
+
+body.jsdw-ai-chat-admin {
+	--jsdw-font-family-sans: "Instrument Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	--jsdw-font-family-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+
+	/* Typography roles (composite font where useful) */
+	--jsdw-type-page-title: 600 1.5rem/1.25 var(--jsdw-font-family-sans);
+	--jsdw-type-page-subtitle: 400 0.9375rem/1.45 var(--jsdw-font-family-sans);
+	--jsdw-type-stat-number: 600 1.75rem/1.15 var(--jsdw-font-family-sans);
+	--jsdw-type-stat-label: 500 0.6875rem/1.3 var(--jsdw-font-family-sans);
+	--jsdw-type-card-section: 600 0.8125rem/1.35 var(--jsdw-font-family-sans);
+	--jsdw-type-info-key: 500 0.8125rem/1.4 var(--jsdw-font-family-sans);
+	--jsdw-type-info-value: 400 0.8125rem/1.45 var(--jsdw-font-family-sans);
+	--jsdw-type-table-header: 600 0.75rem/1.35 var(--jsdw-font-family-sans);
+	--jsdw-type-table-cell: 400 0.8125rem/1.45 var(--jsdw-font-family-sans);
+	--jsdw-type-sidebar-item: 500 0.875rem/1.35 var(--jsdw-font-family-sans);
+	--jsdw-type-sidebar-section: 600 0.6875rem/1.3 var(--jsdw-font-family-sans);
+	--jsdw-type-pill: 500 0.75rem/1.2 var(--jsdw-font-family-sans);
+	--jsdw-type-button: 600 0.8125rem/1.25 var(--jsdw-font-family-sans);
+	--jsdw-type-log-timestamp: 400 0.75rem/1.35 var(--jsdw-font-family-mono);
+	--jsdw-type-log-message: 400 0.8125rem/1.45 var(--jsdw-font-family-sans);
+	--jsdw-type-code-block: 400 0.75rem/1.5 var(--jsdw-font-family-mono);
+	--jsdw-type-brand: 500 0.6875rem/1.3 var(--jsdw-font-family-sans);
+	--jsdw-type-status-pill: 600 0.6875rem/1.2 var(--jsdw-font-family-sans);
+
+	/* Spacing */
+	--jsdw-space-content-padding-x: 20px;
+	--jsdw-space-content-padding-y: 16px;
+	--jsdw-space-card-padding-x: 16px;
+	--jsdw-space-card-padding-y: 14px;
+	--jsdw-space-stat-card-padding: 12px 14px;
+	--jsdw-space-info-row-padding-y: 8px;
+	--jsdw-space-info-row-padding-x: 4px;
+	--jsdw-space-table-cell-padding-x: 10px;
+	--jsdw-space-table-cell-padding-y: 8px;
+	--jsdw-space-card-section-gap: 12px;
+	--jsdw-space-card-margin-bottom: 16px;
+	--jsdw-space-row-gap: 10px;
+	--jsdw-space-stat-row-gap: 12px;
+	--jsdw-space-subtitle-margin-bottom: 12px;
+	--jsdw-space-topbar-padding-x: 20px;
+	--jsdw-space-sidebar-item-padding-y: 8px;
+	--jsdw-space-sidebar-item-padding-x: 12px;
+	--jsdw-space-sidebar-section-padding: 12px 16px;
+	--jsdw-space-button-padding-x: 14px;
+	--jsdw-space-button-padding-y: 8px;
+	--jsdw-space-toggle-row-padding-y: 8px;
+	--jsdw-space-log-row-padding-y: 6px;
+	--jsdw-space-log-row-padding-x: 8px;
+
+	/* Radius */
+	--jsdw-radius-card: 8px;
+	--jsdw-radius-button: 8px;
+	--jsdw-radius-code: 6px;
+	--jsdw-radius-pill: 999px;
+	--jsdw-radius-toggle: 999px;
+
+	/* Motion */
+	--jsdw-motion-page-exit: 180ms;
+	--jsdw-motion-page-enter: 220ms;
+	--jsdw-motion-nav-slider: 260ms;
+	--jsdw-motion-toggle: 160ms;
+	--jsdw-motion-hover: 120ms;
+	--jsdw-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base application — plugin admin screens only (Phase 7.2: shell owns surfaces) */
+body.jsdw-ai-chat-admin #wpcontent {
+	background-color: var(--jsdw-color-app-bg);
+	min-height: calc(100vh - var(--wp-admin--admin-bar--height, 32px));
+}
+
+body.jsdw-ai-chat-admin #wpbody-content {
+	background-color: transparent;
+	color: var(--jsdw-color-text-primary);
+	padding-bottom: 0;
+	overflow-x: hidden;
+	transition: background-color var(--jsdw-motion-hover) var(--jsdw-easing-standard),
+		color var(--jsdw-motion-hover) var(--jsdw-easing-standard);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-page > h1 {
+	font: var(--jsdw-type-page-title);
+	color: var(--jsdw-color-text-page-title);
+	letter-spacing: -0.02em;
+	margin-bottom: var(--jsdw-space-subtitle-margin-bottom);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-page .description,
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-page > p {
+	color: var(--jsdw-color-text-page-subtitle);
+	font-size: 0.9375rem;
+	line-height: 1.45;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .postbox {
+	background: var(--jsdw-color-surface-card);
+	border-color: var(--jsdw-color-border-card);
+	border-radius: var(--jsdw-radius-card);
+	color: var(--jsdw-color-text-primary);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .postbox .hndle,
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .postbox h2.hndle {
+	font: var(--jsdw-type-card-section);
+	color: var(--jsdw-color-text-card-section);
+	border-bottom-color: var(--jsdw-color-border-row);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .form-table th {
+	font: var(--jsdw-type-info-key);
+	color: var(--jsdw-color-text-label);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .form-table td {
+	font: var(--jsdw-type-info-value);
+	color: var(--jsdw-color-text-primary);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .widefat thead th,
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .widefat thead td {
+	font: var(--jsdw-type-table-header);
+	color: var(--jsdw-color-text-label);
+	background: var(--jsdw-color-surface-muted);
+	border-bottom-color: var(--jsdw-color-border-row);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .widefat tbody td,
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .widefat tbody th {
+	font: var(--jsdw-type-table-cell);
+	color: var(--jsdw-color-text-primary);
+	border-bottom-color: var(--jsdw-color-border-row);
+}
+
+/*
+ * WordPress core .widefat applies light striped row backgrounds; our tokens use light text on dark
+ * surfaces. Without overriding row backgrounds, body cells read as light grey on white.
+ */
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .widefat {
+	background: var(--jsdw-color-surface-card);
+	border: 1px solid var(--jsdw-color-border-card);
+	border-collapse: collapse;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .widefat tbody tr {
+	background-color: var(--jsdw-color-surface-card) !important;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .widefat.striped > tbody > tr:nth-child(odd) {
+	background-color: var(--jsdw-color-surface-card) !important;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .widefat.striped > tbody > tr:nth-child(even) {
+	background-color: var(--jsdw-color-surface-muted) !important;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .widefat tbody td,
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .widefat tbody th {
+	background-color: transparent;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .button.button-primary {
+	background: var(--jsdw-color-action-primary);
+	border-color: var(--jsdw-color-action-primary);
+	color: var(--jsdw-color-text-on-accent);
+	border-radius: var(--jsdw-radius-button);
+	font: var(--jsdw-type-button);
+	padding: var(--jsdw-space-button-padding-y) var(--jsdw-space-button-padding-x);
+	transition: background-color var(--jsdw-motion-hover) var(--jsdw-easing-standard),
+		border-color var(--jsdw-motion-hover) var(--jsdw-easing-standard);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .button.button-primary:hover,
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .button.button-primary:focus {
+	background: var(--jsdw-color-action-primary-hover);
+	border-color: var(--jsdw-color-action-primary-hover);
+	color: var(--jsdw-color-text-on-accent);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .button:not(.button-primary) {
+	background: var(--jsdw-color-action-secondary);
+	border-color: var(--jsdw-color-border-card);
+	color: var(--jsdw-color-action-secondary-text);
+	border-radius: var(--jsdw-radius-button);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .notice.notice-success {
+	border-left-color: var(--jsdw-color-status-success);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .notice.notice-error {
+	border-left-color: var(--jsdw-color-status-error);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content code,
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content pre {
+	background: var(--jsdw-color-code-bg);
+	color: var(--jsdw-color-code-text);
+	border-radius: var(--jsdw-radius-code);
+	font: var(--jsdw-type-code-block);
+	padding: 2px 6px;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content pre {
+	padding: var(--jsdw-space-card-padding-y) var(--jsdw-space-card-padding-x);
+	overflow: auto;
+}
+
+/* Overflow utilities (scoped) */
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-u-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-u-break-word {
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+/* Phase 7.3C — Settings cards & field help (scoped) */
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card {
+	background: var(--jsdw-color-surface-card);
+	border: 1px solid var(--jsdw-color-border-card);
+	border-radius: var(--jsdw-radius-card);
+	margin-bottom: var(--jsdw-space-card-margin-bottom);
+	padding: 0;
+	overflow: hidden;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card-header {
+	padding: var(--jsdw-space-card-padding-y) var(--jsdw-space-card-padding-x);
+	border-bottom: 1px solid var(--jsdw-color-border-row);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card-header h2 {
+	font: var(--jsdw-type-card-section);
+	color: var(--jsdw-color-text-card-section);
+	margin: 0;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card-body {
+	padding: var(--jsdw-space-card-padding-y) var(--jsdw-space-card-padding-x);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card-body .form-table {
+	margin-top: 0;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-card-desc {
+	font-size: 13px;
+	opacity: 0.7;
+	margin-top: 4px;
+	margin-bottom: 0;
+	color: var(--jsdw-color-text-secondary);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-field-help {
+	font-size: 12px;
+	opacity: 0.65;
+	margin-top: 4px;
+	margin-bottom: 0;
+	color: var(--jsdw-color-text-secondary);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-field-hint {
+	font-size: 11px;
+	opacity: 0.55;
+	margin-top: 2px;
+	margin-bottom: 0;
+	color: var(--jsdw-color-text-secondary);
+	font-style: italic;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-field-help--warning {
+	color: var(--jsdw-color-status-warning);
+	opacity: 0.9;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-card--danger {
+	border: 1px solid rgba(255, 80, 80, 0.25);
+	background: rgba(255, 80, 80, 0.05);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card--danger .jsdw-card-header {
+	border-bottom-color: rgba(255, 80, 80, 0.2);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-settings-save-top {
+	margin-bottom: var(--jsdw-space-card-margin-bottom);
+}
+
+/* AI provider status (settings + dashboard) */
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-ai-status-row {
+	margin: 0 0 12px;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-ai-status-pill {
+	display: inline-block;
+	padding: 5px 12px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.35;
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-ai-status-pill--neutral {
+	background: var(--jsdw-color-surface-muted, #e8e8ef);
+	color: var(--jsdw-color-text-primary, #1a1528);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-ai-status-pill--info {
+	background: rgba(59, 130, 246, 0.15);
+	color: #1e3a5f;
+	border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-ai-status-pill--warning {
+	background: rgba(245, 158, 11, 0.18);
+	color: #78350f;
+	border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-dashboard-ai {
+	margin-top: var(--jsdw-space-card-margin-bottom, 16px);
+}
+
+body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .jsdw-dashboard-ai .jsdw-dashboard-ai__detail {
+	font-size: 13px;
+	opacity: 0.85;
+	margin: 8px 0 0;
+	color: var(--jsdw-color-text-secondary, #555);
+}
+

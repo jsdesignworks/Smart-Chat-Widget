@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>JSDW AI Chat — Settings preview (Phase 7.3C)</title>
+	<style>
+		/* Standalone: mirrors tokens-admin dark-violet + Phase 7.3C settings layout */
+		html, body { margin: 0; min-height: 100vh; }
+		body.jsdw-ai-chat-admin.jsdw-ai-chat-admin--dark-violet {
+			--jsdw-color-app-bg: #0e0e11;
+			--jsdw-color-surface-content: #12121a;
+			--jsdw-color-surface-card: #1a1a22;
+			--jsdw-color-surface-input: #1e1e24;
+			--jsdw-color-border-card: #32323e;
+			--jsdw-color-border-row: #2e2e38;
+			--jsdw-color-text-page-title: #f4f4f8;
+			--jsdw-color-text-primary: #e8e8f0;
+			--jsdw-color-text-secondary: #7a7a90;
+			--jsdw-color-text-label: #b8b8cc;
+			--jsdw-color-text-card-section: #9ba0b8;
+			--jsdw-color-text-on-accent: #ffffff;
+			--jsdw-color-text-strong: #f0f0f8;
+			--jsdw-color-action-primary: #7c6af7;
+			--jsdw-color-action-primary-hover: #6d5ce8;
+			--jsdw-color-status-warning: #fbbf24;
+			--jsdw-font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			--jsdw-type-page-title: 600 1.5rem/1.25 var(--jsdw-font-family-sans);
+			--jsdw-type-card-section: 600 0.8125rem/1.35 var(--jsdw-font-family-sans);
+			--jsdw-type-info-key: 500 0.8125rem/1.4 var(--jsdw-font-family-sans);
+			--jsdw-type-info-value: 400 0.8125rem/1.45 var(--jsdw-font-family-sans);
+			--jsdw-type-button: 600 0.8125rem/1.25 var(--jsdw-font-family-sans);
+			--jsdw-space-card-padding-x: 16px;
+			--jsdw-space-card-padding-y: 14px;
+			--jsdw-space-card-margin-bottom: 16px;
+			--jsdw-space-subtitle-margin-bottom: 12px;
+			--jsdw-space-button-padding-x: 14px;
+			--jsdw-space-button-padding-y: 8px;
+			--jsdw-radius-card: 8px;
+			--jsdw-radius-button: 8px;
+			background: var(--jsdw-color-app-bg);
+			color: var(--jsdw-color-text-primary);
+			font-family: var(--jsdw-font-family-sans);
+		}
+		#jsdw-design-studio-wrap .jsdw-content { padding: 24px 26px; background: var(--jsdw-color-surface-content); max-width: 920px; margin: 0 auto; }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-page > h1 { font: var(--jsdw-type-page-title); color: var(--jsdw-color-text-page-title); margin: 0 0 var(--jsdw-space-subtitle-margin-bottom); letter-spacing: -0.02em; }
+		#jsdw-design-studio-wrap .jsdw-content .button.button-primary { background: var(--jsdw-color-action-primary); border: 1px solid var(--jsdw-color-action-primary); color: var(--jsdw-color-text-on-accent); border-radius: var(--jsdw-radius-button); font: var(--jsdw-type-button); padding: var(--jsdw-space-button-padding-y) var(--jsdw-space-button-padding-x); cursor: pointer; }
+		#jsdw-design-studio-wrap .jsdw-content .button.button-primary:hover { background: var(--jsdw-color-action-primary-hover); border-color: var(--jsdw-color-action-primary-hover); }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card { background: var(--jsdw-color-surface-card); border: 1px solid var(--jsdw-color-border-card); border-radius: var(--jsdw-radius-card); margin-bottom: var(--jsdw-space-card-margin-bottom); padding: 0; overflow: hidden; }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card-header { padding: var(--jsdw-space-card-padding-y) var(--jsdw-space-card-padding-x); border-bottom: 1px solid var(--jsdw-color-border-row); }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card-header h2 { font: var(--jsdw-type-card-section); color: var(--jsdw-color-text-card-section); margin: 0; }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card-body { padding: var(--jsdw-space-card-padding-y) var(--jsdw-space-card-padding-x); }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card-body .form-table { margin-top: 0; width: 100%; border-collapse: collapse; }
+		#jsdw-design-studio-wrap .jsdw-content .form-table th { font: var(--jsdw-type-info-key); color: var(--jsdw-color-text-label); text-align: left; vertical-align: top; padding: 12px 10px 12px 0; width: 220px; }
+		#jsdw-design-studio-wrap .jsdw-content .form-table td { font: var(--jsdw-type-info-value); color: var(--jsdw-color-text-primary); padding: 12px 0; }
+		#jsdw-design-studio-wrap .jsdw-content input[type="checkbox"] { accent-color: var(--jsdw-color-action-primary); margin-right: 6px; vertical-align: middle; }
+		#jsdw-design-studio-wrap .jsdw-content select, #jsdw-design-studio-wrap .jsdw-content input[type="text"], #jsdw-design-studio-wrap .jsdw-content input[type="number"], #jsdw-design-studio-wrap .jsdw-content textarea { background: var(--jsdw-color-surface-input); border: 1px solid var(--jsdw-color-border-card); color: var(--jsdw-color-text-primary); border-radius: 6px; padding: 6px 10px; font: var(--jsdw-type-info-value); max-width: 100%; box-sizing: border-box; }
+		#jsdw-design-studio-wrap .jsdw-content textarea { width: min(100%, 480px); resize: vertical; min-height: 72px; }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-card-desc { font-size: 13px; opacity: 0.7; margin-top: 4px; margin-bottom: 0; color: var(--jsdw-color-text-secondary); }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-field-help { font-size: 12px; opacity: 0.65; margin-top: 4px; margin-bottom: 0; color: var(--jsdw-color-text-secondary); }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-field-hint { font-size: 11px; opacity: 0.55; margin-top: 2px; margin-bottom: 0; color: var(--jsdw-color-text-secondary); font-style: italic; }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-field-help--warning { color: var(--jsdw-color-status-warning); opacity: 0.9; }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-card--danger { border: 1px solid rgba(255, 80, 80, 0.25); background: rgba(255, 80, 80, 0.05); }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-settings-page .jsdw-card--danger .jsdw-card-header { border-bottom-color: rgba(255, 80, 80, 0.2); }
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-settings-save-top { margin-bottom: var(--jsdw-space-card-margin-bottom); }
+		#jsdw-design-studio-wrap .jsdw-content .description { color: var(--jsdw-color-text-secondary); font-size: 0.875rem; line-height: 1.45; margin: 0; }
+		#jsdw-design-studio-wrap .jsdw-content .submit { margin-top: 8px; }
+
+	</style>
+</head>
+<body class="jsdw-ai-chat-admin jsdw-ai-chat-admin--dark-violet">
+	<div id="jsdw-design-studio-wrap">
+		<div class="jsdw-content">
+			<div class="jsdw-page jsdw-settings-page">
+				<h1>JSDW AI Chat Settings</h1>
+				<p class="jsdw-settings-save-top"><button type="button" class="button button-primary">Save settings</button></p>
+				<div class="jsdw-card">
+			<div class="jsdw-card-header">
+				<h2>Core System</h2>
+				<p class="jsdw-card-desc">These options keep the assistant’s engine running. Turning them off can break chat, updates, or saving until you turn them back on.</p>
+			</div>
+			<div class="jsdw-card-body">
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Plugin enabled</th><td><label><input type="checkbox" checked /> Enable plugin</label><p class="jsdw-field-help">Turns the whole assistant off or on. When off, nothing from this plugin runs.</p></td></tr><tr><th scope="row">REST API</th><td><label><input type="checkbox" checked /> Enabled</label><p class="jsdw-field-help">Lets the chat talk to your site in the background so questions and answers can work.</p><p class="jsdw-field-hint">Recommended: Enabled</p></td></tr><tr><th scope="row">WP-Cron</th><td><label><input type="checkbox" checked /> Enabled</label><p class="jsdw-field-help">Lets WordPress run tasks on a schedule; the assistant may use this for upkeep (for example refreshing content).</p><p class="jsdw-field-hint">Recommended: Enabled</p></td></tr><tr><th scope="row">Background processing queue</th><td><label><input type="checkbox" checked /> Enabled</label><p class="jsdw-field-help">Runs heavy work in the background so your pages stay fast while content is prepared for answers.</p><p class="jsdw-field-hint">Recommended: Enabled</p></td></tr><tr><th scope="row">Store conversations</th><td><label><input type="checkbox" checked /> Enabled</label><p class="jsdw-field-help">Allows chats to be saved on your server when your other choices allow it (see “Save conversation transcripts” in Chat Behavior).</p><p class="jsdw-field-hint">Recommended: Enabled</p></td></tr>
+				</table>
+			</div>
+		</div>
+				<div class="jsdw-card">
+			<div class="jsdw-card-header">
+				<h2>Data &amp; Processing</h2>
+				<p class="jsdw-card-desc">How your site’s content is scanned and prepared so the assistant can answer from it.</p>
+			</div>
+			<div class="jsdw-card-body">
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Indexing pipeline</th><td><label><input type="checkbox" checked /> Enabled</label><p class="jsdw-field-help">Finds and prepares your site’s pages and posts so the assistant can answer from them.</p><p class="jsdw-field-hint">Recommended: Enabled</p></td></tr><tr><th scope="row">AI features (when available)</th><td><label><input type="checkbox" checked /> Enabled</label><p class="jsdw-field-help">Turns on extra AI-powered options when you have them set up elsewhere.</p></td></tr><tr><th scope="row">Auto reindex</th><td><label><input type="checkbox" /> Enable</label><p class="jsdw-field-help">When you change content, queues a refresh so answers can use the latest information.</p></td></tr><tr><th scope="row"><label for="pv-prov">Provider (identifier)</label></th><td><input type="text" id="pv-prov" value="openai" /><p class="jsdw-field-help">A short name for which AI service or setup you are using (your host or docs may tell you what to enter).</p></td></tr>
+				</table>
+			</div>
+		</div>
+				<div class="jsdw-card">
+			<div class="jsdw-card-header">
+				<h2>Chat Behavior</h2>
+				<p class="jsdw-card-desc">Controls how the assistant responds to users.</p>
+			</div>
+			<div class="jsdw-card-body">
+				<table class="form-table" role="presentation">
+					<tr><th scope="row"><label for="pv-am">Answer mode</label></th><td><select id="pv-am"><option>Strict local only</option><option selected>Local with optional AI phrase</option><option>Debug trace</option></select><p class="jsdw-field-help">Chooses how strictly answers stick to your site’s content and whether optional wording help is used.</p></td></tr><tr><th scope="row"><label for="pv-st">Answer style</label></th><td><select id="pv-st"><option>Concise</option><option selected>Neutral</option><option>Friendly</option></select><p class="jsdw-field-help">Adjusts how formal, friendly, or short replies tend to be.</p></td></tr><tr><th scope="row">Clarification</th><td><label><input type="checkbox" checked /> Enable clarification prompts</label><p class="jsdw-field-help">If a question is unclear, the assistant may ask a quick clarifying question before answering.</p></td></tr><tr><th scope="row">Enable AI-assisted phrasing (when available)</th><td><label><input type="checkbox" checked /> Enabled</label><p class="jsdw-field-help">May smooth or tighten how an answer is worded when your answer mode allows it.</p></td></tr><tr><th scope="row">Debug trace (chat)</th><td><label><input type="checkbox" /> Enabled</label><p class="jsdw-field-help">Adds technical detail for site administrators who need to troubleshoot replies.</p></td></tr><tr><th scope="row">Store trace snapshots</th><td><label><input type="checkbox" /> Enabled</label><p class="jsdw-field-help">Saves technical snapshots on the server to help support or debugging (uses storage).</p></td></tr><tr><th scope="row"><label for="pv-min">Min query length</label></th><td><input type="number" id="pv-min" value="2" /><p class="jsdw-field-help">Ignores very short messages until the visitor types at least this many characters.</p></td></tr><tr><th scope="row"><label for="pv-max">Max query length</label></th><td><input type="number" id="pv-max" value="500" /><p class="jsdw-field-help">Caps how long a single message can be to keep the site responsive and safe.</p></td></tr><tr><th scope="row">Save conversation transcripts</th><td><label><input type="checkbox" checked /> Enable</label><p class="jsdw-field-help">If enabled, full chats can be stored in your site’s database; turn off if you do not want that.</p></td></tr>
+				</table>
+			</div>
+		</div>
+				<div class="jsdw-card">
+			<div class="jsdw-card-header">
+				<h2>Access &amp; Security</h2>
+				<p class="jsdw-card-desc">Controls who can access your assistant.</p>
+			</div>
+			<div class="jsdw-card-body">
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Allow public query endpoint</th><td><label><input type="checkbox" /> Allow unauthenticated visitors to call the chat query endpoint (when nonce is valid)</label><p class="jsdw-field-help jsdw-field-help--warning">Anyone visiting the site could use the assistant from the front end when this is on; make sure that matches your privacy and moderation plans.</p></td></tr>
+				</table>
+			</div>
+		</div>
+				<div class="jsdw-card">
+			<div class="jsdw-card-header">
+				<h2>Frontend Widget</h2>
+				<p class="jsdw-card-desc">Controls whether the chat widget appears on your site.</p>
+			</div>
+			<div class="jsdw-card-body">
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Front-end widget</th><td><label><input type="checkbox" checked /> Enable widget feature</label><p class="jsdw-field-help">Enables chat bubble features; you still choose below whether visitors actually see the bubble.</p><p class="jsdw-field-hint">Recommended: Enabled</p></td></tr><tr><th scope="row">Widget enabled</th><td><label><input type="checkbox" checked /> Output widget when plugin and feature flags allow</label><p class="jsdw-field-help">When all requirements are met, visitors see the chat bubble on your site.</p></td></tr><tr><th scope="row"><label for="pv-pos">Widget position override</label></th><td><select id="pv-pos"><option>Use design default</option><option selected>Bottom right</option><option>Bottom left</option><option>Top right</option><option>Top left</option></select><p class="jsdw-field-help">Picks which corner the bubble uses instead of the default from Design Studio.</p></td></tr><tr><th scope="row"><label for="pv-lab">Launcher label</label></th><td><input type="text" id="pv-lab" placeholder="Chat" /><p class="jsdw-field-help">Words shown on the closed chat button (for example “Chat” or “Help”).</p></td></tr><tr><th scope="row"><label for="pv-wel">Welcome message override</label></th><td><textarea id="pv-wel" rows="3">Hi — ask me anything about this site.</textarea><p class="jsdw-field-help">Greeting visitors read when they open the chat.</p></td></tr><tr><th scope="row"><label for="pv-ph">Placeholder override</label></th><td><input type="text" id="pv-ph" placeholder="Type your question…" /><p class="jsdw-field-help">Hint text inside the box where visitors type (before they start typing).</p></td></tr><tr><th scope="row">Show sources</th><td><label><input type="checkbox" checked /> When formatter includes sources</label><p class="jsdw-field-help">When an answer cites your content, visitors can see where it came from.</p></td></tr><tr><th scope="row">Allow reset conversation</th><td><label><input type="checkbox" checked /> Enable</label><p class="jsdw-field-help">Lets visitors clear the chat and start over.</p></td></tr><tr><th scope="row">Admin debug UI</th><td><label><input type="checkbox" /> For admins with capability</label><p class="jsdw-field-help">Shows advanced options in the bubble for administrators who manage the site.</p></td></tr><tr><th scope="row">Auto footer injection</th><td><label><input type="checkbox" checked /> Inject mount when shortcode not used</label><p class="jsdw-field-help">If you did not add the chat shortcode to a page, the plugin can still load the bubble from your site footer.</p></td></tr>
+				</table>
+			</div>
+		</div>
+				<div class="jsdw-card">
+			<div class="jsdw-card-header">
+				<h2>Logging</h2>
+				<p class="jsdw-card-desc">A technical diary the plugin can write to help diagnose issues.</p>
+			</div>
+			<div class="jsdw-card-body">
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Logging enabled</th><td><label><input type="checkbox" /> Enable</label><p class="jsdw-field-help">Records technical events in a log to help track down problems.</p></td></tr><tr><th scope="row">Mirror WP_DEBUG</th><td><label><input type="checkbox" /> Enable</label><p class="jsdw-field-help">When WordPress debug mode is on, matches how detailed the log is.</p></td></tr><tr><th scope="row"><label for="pv-log">Minimum log level</label></th><td><select id="pv-log"><option>debug</option><option selected>info</option><option>warning</option><option>error</option><option>critical</option></select><p class="jsdw-field-help">For example, “info” and above includes routine messages; “error” means only serious problems.</p></td></tr>
+				</table>
+			</div>
+		</div>
+				<div class="jsdw-card jsdw-card--danger">
+			<div class="jsdw-card-header">
+				<h2>Data &amp; Cleanup</h2>
+				<p class="jsdw-card-desc">This action is irreversible.</p>
+			</div>
+			<div class="jsdw-card-body">
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Remove data on uninstall</th><td><label><input type="checkbox" /> Enabled</label><p class="jsdw-field-help">When you uninstall the plugin, this removes its stored data from the database; you cannot undo that later.</p></td></tr>
+				</table>
+			</div>
+		</div>
+				<div class="jsdw-card">
+			<div class="jsdw-card-header">
+				<h2>Sources (reference)</h2>
+			</div>
+			<div class="jsdw-card-body">
+				<p class="description">Fine-grained rules for which pages and URLs feed the assistant live elsewhere. Use Source Registry and indexing tools to change them—not this screen.</p>
+			</div>
+		</div>
+				<p class="submit"><button type="button" class="button button-primary">Save settings</button></p>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

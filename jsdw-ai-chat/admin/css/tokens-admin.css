@@ -1,0 +1,152 @@
+/**
+ * Phase 7.1 — Admin design tokens (canonical --jsdw-*).
+ * Mode: body.jsdw-ai-chat-admin + exactly one of --dark-violet | --warm-clay.
+ *
+ * @package JSDW_AI_Chat
+ */
+
+/* -------------------------------------------------------------------------
+   Dark Violet (default admin experience)
+   ------------------------------------------------------------------------- */
+body.jsdw-ai-chat-admin.jsdw-ai-chat-admin--dark-violet {
+	/* Surfaces */
+	--jsdw-color-app-bg: #0e0e11;
+	--jsdw-color-surface-sidebar: #16161a;
+	--jsdw-color-surface-topbar: #1a1a22;
+	--jsdw-color-surface-content: #12121a;
+	--jsdw-color-surface-card: #1a1a22;
+	--jsdw-color-surface-stat: #1e1e28;
+	--jsdw-color-surface-input: #1e1e24;
+	--jsdw-color-surface-muted: #2a2a35;
+	--jsdw-color-surface-active: #2f2f3d;
+	--jsdw-color-surface-slider: #252530;
+	--jsdw-color-border-shell: #2a2a35;
+	--jsdw-color-border-card: #32323e;
+	--jsdw-color-border-row: #2e2e38;
+
+	/* Text */
+	--jsdw-color-text-page-title: #f4f4f8;
+	--jsdw-color-text-page-subtitle: #a8a8bc;
+	--jsdw-color-text-primary: #e8e8f0;
+	--jsdw-color-text-secondary: #7a7a90;
+	--jsdw-color-text-label: #b8b8cc;
+	--jsdw-color-text-card-section: #9ba0b8;
+	--jsdw-color-text-stat: #f0f0f8;
+	--jsdw-color-text-stat-accent: #c4b5fd;
+	--jsdw-color-text-sidebar-inactive: #9ca3af;
+	--jsdw-color-text-sidebar-active: #f4f4f8;
+	--jsdw-color-text-on-accent: #ffffff;
+	--jsdw-color-text-strong: #222222;
+	--jsdw-color-text-on-save: #1a1200;
+	--jsdw-color-text-accent-value: #a699ff;
+
+	/* Actions */
+	--jsdw-color-badge-bg: #7c6af7;
+	--jsdw-color-badge-text: #ffffff;
+	--jsdw-color-action-primary: #7c6af7;
+	--jsdw-color-action-primary-hover: #6d5ce8;
+	--jsdw-color-action-secondary: #3d3d4a;
+	--jsdw-color-action-secondary-text: #e8e8f0;
+	--jsdw-color-action-save: #f7c26a;
+	--jsdw-color-action-save-hover: #e8b55a;
+	--jsdw-color-toggle-on: #7c6af7;
+	--jsdw-color-toggle-off: #4b4b58;
+
+	/* Utility / status */
+	--jsdw-color-code-bg: #16161f;
+	--jsdw-color-code-text: #d4d4e0;
+	--jsdw-color-log-time: #8b8ba0;
+	--jsdw-color-log-message: #c8c8d8;
+	--jsdw-color-status-success: #4ade80;
+	--jsdw-color-status-error: #f87171;
+	--jsdw-color-status-warning: #fbbf24;
+	--jsdw-color-notification-badge: #e53935;
+	--jsdw-color-typing-dot: #888888;
+
+	/* Preview / Design Studio chrome (fake browser) */
+	--jsdw-color-preview-window-bg: #ffffff;
+	--jsdw-color-preview-chrome-border: #dddddd;
+	--jsdw-color-preview-traffic-close: #ff5f57;
+	--jsdw-color-preview-traffic-min: #febc2e;
+	--jsdw-color-preview-traffic-max: #28c840;
+	/* Design Studio preview widget (light bubble on dark canvas) */
+	--jsdw-color-chat-bot-bubble: #f0f0f5;
+	--jsdw-color-preview-chrome-bg: #e8e8e8;
+	--jsdw-color-preview-chrome-border-strong: #cccccc;
+	--jsdw-color-preview-url-text: #666666;
+	--jsdw-color-preview-skeleton-1: #dddddd;
+	--jsdw-color-preview-skeleton-2: #e5e5e5;
+	--jsdw-color-preview-skeleton-3: #eeeeee;
+	--jsdw-color-preview-skeleton-border: #eeeeee;
+	--jsdw-color-toggle-knob: #ffffff;
+}
+
+/* -------------------------------------------------------------------------
+   Warm Clay
+   ------------------------------------------------------------------------- */
+body.jsdw-ai-chat-admin.jsdw-ai-chat-admin--warm-clay {
+	--jsdw-color-app-bg: #faf8f5;
+	--jsdw-color-surface-sidebar: #f3eee8;
+	--jsdw-color-surface-topbar: #ffffff;
+	--jsdw-color-surface-content: #ffffff;
+	--jsdw-color-surface-card: #ffffff;
+	--jsdw-color-surface-stat: #f6f1eb;
+	--jsdw-color-surface-input: #ffffff;
+	--jsdw-color-surface-muted: #ebe4dc;
+	--jsdw-color-surface-active: #e8dfd4;
+	--jsdw-color-surface-slider: #efe8e0;
+	--jsdw-color-border-shell: #e0d6ca;
+	--jsdw-color-border-card: #ddd3c7;
+	--jsdw-color-border-row: #e5dcd2;
+
+	--jsdw-color-text-page-title: #1f1a16;
+	--jsdw-color-text-page-subtitle: #5c534a;
+	--jsdw-color-text-primary: #2d2824;
+	--jsdw-color-text-secondary: #6b6258;
+	--jsdw-color-text-label: #5a5248;
+	--jsdw-color-text-card-section: #6b5346;
+	--jsdw-color-text-stat: #1f1a16;
+	--jsdw-color-text-stat-accent: #8b5a3c;
+	--jsdw-color-text-sidebar-inactive: #6b6258;
+	--jsdw-color-text-sidebar-active: #1f1a16;
+	--jsdw-color-text-on-accent: #ffffff;
+	--jsdw-color-text-strong: #2d2824;
+	--jsdw-color-text-on-save: #1a1200;
+	--jsdw-color-text-accent-value: #8b5a3c;
+
+	--jsdw-color-badge-bg: #c4a574;
+	--jsdw-color-badge-text: #1f1a16;
+	--jsdw-color-action-primary: #8b5a3c;
+	--jsdw-color-action-primary-hover: #744832;
+	--jsdw-color-action-secondary: #e8dfd4;
+	--jsdw-color-action-secondary-text: #2d2824;
+	--jsdw-color-action-save: #d4a574;
+	--jsdw-color-action-save-hover: #c49564;
+	--jsdw-color-toggle-on: #8b5a3c;
+	--jsdw-color-toggle-off: #c4b8aa;
+
+	--jsdw-color-code-bg: #f0ebe4;
+	--jsdw-color-code-text: #3d342c;
+	--jsdw-color-log-time: #8a7d72;
+	--jsdw-color-log-message: #4a423a;
+	--jsdw-color-status-success: #15803d;
+	--jsdw-color-status-error: #b91c1c;
+	--jsdw-color-status-warning: #b45309;
+	--jsdw-color-notification-badge: #c62828;
+	--jsdw-color-typing-dot: #8a7d72;
+
+	--jsdw-color-preview-window-bg: #ffffff;
+	--jsdw-color-preview-chrome-border: #ddd3c7;
+	--jsdw-color-preview-traffic-close: #e07872;
+	--jsdw-color-preview-traffic-min: #e6b84d;
+	--jsdw-color-preview-traffic-max: #5cb87a;
+	--jsdw-color-chat-bot-bubble: #f6f1eb;
+	--jsdw-color-preview-chrome-bg: #ebe4dc;
+	--jsdw-color-preview-chrome-border-strong: #d4c9bc;
+	--jsdw-color-preview-url-text: #6b6258;
+	--jsdw-color-preview-skeleton-1: #ddd3c7;
+	--jsdw-color-preview-skeleton-2: #e5dcd2;
+	--jsdw-color-preview-skeleton-3: #efe8e0;
+	--jsdw-color-preview-skeleton-border: #e8dfd4;
+	--jsdw-color-toggle-knob: #ffffff;
+}

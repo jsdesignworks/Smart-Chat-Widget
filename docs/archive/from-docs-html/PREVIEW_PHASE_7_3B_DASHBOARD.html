@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>JSDW AI Chat — Dashboard preview (Phase 7.3B)</title>
+	<style>
+		/* Standalone preview: mirrors admin/css/tokens-admin.css (dark-violet) + foundation typography vars + admin/css/dashboard-admin.css */
+		html, body { margin: 0; min-height: 100vh; }
+		body.jsdw-ai-chat-admin.jsdw-ai-chat-admin--dark-violet {
+			--jsdw-color-app-bg: #0e0e11;
+			--jsdw-color-surface-sidebar: #16161a;
+			--jsdw-color-surface-topbar: #1a1a22;
+			--jsdw-color-surface-content: #12121a;
+			--jsdw-color-surface-card: #1a1a22;
+			--jsdw-color-surface-stat: #1e1e28;
+			--jsdw-color-surface-input: #1e1e24;
+			--jsdw-color-surface-muted: #2a2a35;
+			--jsdw-color-surface-active: #2f2f3d;
+			--jsdw-color-surface-slider: #252530;
+			--jsdw-color-border-shell: #2a2a35;
+			--jsdw-color-border-card: #32323e;
+			--jsdw-color-border-row: #2e2e38;
+			--jsdw-color-text-page-title: #f4f4f8;
+			--jsdw-color-text-page-subtitle: #a8a8bc;
+			--jsdw-color-text-primary: #e8e8f0;
+			--jsdw-color-text-secondary: #7a7a90;
+			--jsdw-color-text-label: #b8b8cc;
+			--jsdw-color-text-card-section: #9ba0b8;
+			--jsdw-color-text-stat: #f0f0f8;
+			--jsdw-color-text-stat-accent: #c4b5fd;
+			--jsdw-color-text-on-accent: #ffffff;
+			--jsdw-color-action-primary: #7c6af7;
+			--jsdw-color-action-primary-hover: #6d5ce8;
+			--jsdw-color-action-secondary: #3d3d4a;
+			--jsdw-color-action-secondary-text: #e8e8f0;
+			--jsdw-color-status-success: #4ade80;
+			--jsdw-color-status-error: #f87171;
+			--jsdw-color-status-warning: #fbbf24;
+			--jsdw-font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			--jsdw-font-family-mono: ui-monospace, Menlo, Monaco, Consolas, monospace;
+			--jsdw-type-page-title: 600 1.5rem/1.25 var(--jsdw-font-family-sans);
+			--jsdw-type-stat-number: 600 1.75rem/1.15 var(--jsdw-font-family-sans);
+			--jsdw-type-stat-label: 500 0.6875rem/1.3 var(--jsdw-font-family-sans);
+			--jsdw-type-card-section: 600 0.8125rem/1.35 var(--jsdw-font-family-sans);
+			--jsdw-type-info-value: 400 0.8125rem/1.45 var(--jsdw-font-family-sans);
+			--jsdw-type-sidebar-item: 500 0.875rem/1.35 var(--jsdw-font-family-sans);
+			--jsdw-type-button: 600 0.8125rem/1.25 var(--jsdw-font-family-sans);
+			--jsdw-space-stat-card-padding: 12px 14px;
+			--jsdw-space-card-padding-x: 16px;
+			--jsdw-space-card-padding-y: 14px;
+			--jsdw-space-card-section-gap: 12px;
+			--jsdw-space-card-margin-bottom: 16px;
+			--jsdw-space-row-gap: 10px;
+			--jsdw-radius-card: 8px;
+			--jsdw-radius-button: 8px;
+			--jsdw-radius-pill: 999px;
+			--jsdw-space-button-padding-x: 14px;
+			--jsdw-space-button-padding-y: 8px;
+			--jsdw-motion-hover: 120ms;
+			--jsdw-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+			background: var(--jsdw-color-app-bg);
+			color: var(--jsdw-color-text-primary);
+			font-family: var(--jsdw-font-family-sans);
+		}
+		#jsdw-design-studio-wrap .jsdw-content {
+			padding: 24px 26px;
+			background: var(--jsdw-color-surface-content);
+			max-width: 1200px;
+			margin: 0 auto;
+		}
+		#jsdw-design-studio-wrap .jsdw-content .jsdw-page > h1 {
+			font: var(--jsdw-type-page-title);
+			color: var(--jsdw-color-text-page-title);
+			margin: 0 0 0.75em;
+		}
+		#jsdw-design-studio-wrap .jsdw-content .button.button-primary {
+			background: var(--jsdw-color-action-primary);
+			border-color: var(--jsdw-color-action-primary);
+			color: var(--jsdw-color-text-on-accent);
+			border-radius: var(--jsdw-radius-button);
+			font: var(--jsdw-type-button);
+			padding: var(--jsdw-space-button-padding-y) var(--jsdw-space-button-padding-x);
+			text-decoration: none;
+			display: inline-block;
+        }
+		#jsdw-design-studio-wrap .jsdw-content .button:not(.button-primary) {
+			background: var(--jsdw-color-action-secondary);
+			border-color: var(--jsdw-color-border-card);
+			color: var(--jsdw-color-action-secondary-text);
+			border-radius: var(--jsdw-radius-button);
+			font: var(--jsdw-type-button);
+			padding: var(--jsdw-space-button-padding-y) var(--jsdw-space-button-padding-x);
+			text-decoration: none;
+			display: inline-block;
+			border-width: 1px;
+			border-style: solid;
+		}
+	</style>
+	<style>
+		/* admin/css/dashboard-admin.css (production) */
+		#jsdw-design-studio-wrap .jsdw-dashboard {
+			max-width: 1200px;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-dashboard > h1 {
+			margin-top: 0;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-dashboard-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+			gap: 20px;
+			margin-bottom: 24px;
+		}
+
+		#jsdw-design-studio-wrap a.jsdw-stat-card {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			padding: var(--jsdw-space-stat-card-padding);
+			background: var(--jsdw-color-surface-stat);
+			border: 1px solid var(--jsdw-color-border-card);
+			border-radius: var(--jsdw-radius-card);
+			text-decoration: none;
+			color: inherit;
+			transition: border-color var(--jsdw-motion-hover) var(--jsdw-easing-standard),
+				background-color var(--jsdw-motion-hover) var(--jsdw-easing-standard);
+		}
+
+		#jsdw-design-studio-wrap a.jsdw-stat-card:hover,
+		#jsdw-design-studio-wrap a.jsdw-stat-card:focus {
+			border-color: var(--jsdw-color-border-shell);
+			background: var(--jsdw-color-surface-active);
+			outline: none;
+		}
+
+		#jsdw-design-studio-wrap a.jsdw-stat-card:focus-visible {
+			box-shadow: 0 0 0 2px var(--jsdw-color-action-primary);
+		}
+
+		#jsdw-design-studio-wrap .jsdw-stat-label {
+			font: var(--jsdw-type-stat-label);
+			color: var(--jsdw-color-text-label);
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-stat-value {
+			font: var(--jsdw-type-stat-number);
+			color: var(--jsdw-color-text-stat);
+		}
+
+		#jsdw-design-studio-wrap .jsdw-stat-meta {
+			font: var(--jsdw-type-info-value);
+			color: var(--jsdw-color-text-secondary);
+			line-height: 1.4;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-card {
+			background: var(--jsdw-color-surface-card);
+			border: 1px solid var(--jsdw-color-border-card);
+			border-radius: var(--jsdw-radius-card);
+			padding: var(--jsdw-space-card-padding-y) var(--jsdw-space-card-padding-x);
+			margin-bottom: var(--jsdw-space-card-margin-bottom);
+		}
+
+		#jsdw-design-studio-wrap .jsdw-card__title {
+			font: var(--jsdw-type-card-section);
+			color: var(--jsdw-color-text-card-section);
+			margin: 0 0 var(--jsdw-space-card-section-gap);
+			padding-bottom: 8px;
+			border-bottom: 1px solid var(--jsdw-color-border-row);
+		}
+
+		#jsdw-design-studio-wrap .jsdw-pipeline-list {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+			display: flex;
+			flex-direction: column;
+			gap: var(--jsdw-space-row-gap);
+		}
+
+		#jsdw-design-studio-wrap .jsdw-pipeline-row {
+			display: flex;
+			align-items: flex-start;
+			gap: 12px;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-pipeline-dot {
+			flex: 0 0 10px;
+			width: 10px;
+			height: 10px;
+			border-radius: 999px;
+			margin-top: 6px;
+			background: var(--jsdw-color-surface-muted);
+			border: 1px solid var(--jsdw-color-border-card);
+		}
+
+		#jsdw-design-studio-wrap .jsdw-pipeline-dot--ok {
+			background: var(--jsdw-color-status-success);
+			border-color: transparent;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-pipeline-dot--warn {
+			background: var(--jsdw-color-status-warning);
+			border-color: transparent;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-pipeline-dot--inactive {
+			background: var(--jsdw-color-surface-muted);
+			border-color: var(--jsdw-color-border-row);
+		}
+
+		#jsdw-design-studio-wrap .jsdw-pipeline-dot--neutral {
+			background: transparent;
+			border: 2px solid var(--jsdw-color-text-secondary);
+			opacity: 0.7;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-pipeline-body {
+			min-width: 0;
+			flex: 1;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-pipeline-label {
+			font: var(--jsdw-type-sidebar-item);
+			color: var(--jsdw-color-text-primary);
+			margin-bottom: 4px;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-pipeline-summary {
+			font: var(--jsdw-type-info-value);
+			color: var(--jsdw-color-text-secondary);
+			line-height: 1.45;
+			overflow-wrap: anywhere;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-dashboard-actions__row {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			align-items: center;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-dashboard-action.button {
+			height: auto;
+			min-height: 0;
+			line-height: 1.35;
+			white-space: normal;
+			text-align: center;
+		}
+
+		#jsdw-design-studio-wrap .jsdw-dashboard-footnote {
+			margin: 16px 0 0;
+			font: var(--jsdw-type-info-value);
+			color: var(--jsdw-color-text-secondary);
+		}
+	</style>
+</head>
+<body class="jsdw-ai-chat-admin jsdw-ai-chat-admin--dark-violet">
+	<div id="jsdw-design-studio-wrap">
+		<div class="jsdw-content">
+			<div class="jsdw-page jsdw-dashboard">
+				<h1>JSDW AI Chat Dashboard</h1>
+
+				<div class="jsdw-dashboard-grid">
+					<a class="jsdw-stat-card" href="#">
+						<div class="jsdw-stat-label">Total Sources</div>
+						<div class="jsdw-stat-value">12</div>
+						<div class="jsdw-stat-meta">All registered sources</div>
+					</a>
+					<a class="jsdw-stat-card" href="#">
+						<div class="jsdw-stat-label">Pending Reindex</div>
+						<div class="jsdw-stat-value">1</div>
+						<div class="jsdw-stat-meta">Sources flagged for reindex</div>
+					</a>
+					<a class="jsdw-stat-card" href="#">
+						<div class="jsdw-stat-label">Knowledge Status</div>
+						<div class="jsdw-stat-value">12</div>
+						<div class="jsdw-stat-meta">failed: 1 · pending: 2 · ready: 9</div>
+					</a>
+					<a class="jsdw-stat-card" href="#">
+						<div class="jsdw-stat-label">Conversations</div>
+						<div class="jsdw-stat-value">48</div>
+						<div class="jsdw-stat-meta">Stored conversations (all time)</div>
+					</a>
+				</div>
+
+				<div class="jsdw-card jsdw-dashboard-pipeline">
+					<div class="jsdw-card__title">Pipeline status</div>
+					<ul class="jsdw-pipeline-list">
+						<li class="jsdw-pipeline-row">
+							<span class="jsdw-pipeline-dot jsdw-pipeline-dot--warn" aria-hidden="true"></span>
+							<div class="jsdw-pipeline-body">
+								<div class="jsdw-pipeline-label">Discovery</div>
+								<div class="jsdw-pipeline-summary">Enabled: yes · Pending reindex: 1 · Discovery queue jobs: 0</div>
+							</div>
+						</li>
+						<li class="jsdw-pipeline-row">
+							<span class="jsdw-pipeline-dot jsdw-pipeline-dot--warn" aria-hidden="true"></span>
+							<div class="jsdw-pipeline-body">
+								<div class="jsdw-pipeline-label">Content</div>
+								<div class="jsdw-pipeline-summary">Sources in content status buckets: 12 · Content queue jobs: 2</div>
+							</div>
+						</li>
+						<li class="jsdw-pipeline-row">
+							<span class="jsdw-pipeline-dot jsdw-pipeline-dot--warn" aria-hidden="true"></span>
+							<div class="jsdw-pipeline-body">
+								<div class="jsdw-pipeline-label">Knowledge</div>
+								<div class="jsdw-pipeline-summary">failed: 1 · pending: 2 · ready: 9 · Knowledge queue jobs: 0</div>
+							</div>
+						</li>
+						<li class="jsdw-pipeline-row">
+							<span class="jsdw-pipeline-dot jsdw-pipeline-dot--ok" aria-hidden="true"></span>
+							<div class="jsdw-pipeline-body">
+								<div class="jsdw-pipeline-label">Answering</div>
+								<div class="jsdw-pipeline-summary">Conversations: 48 · Messages: 312 · Mode: strict_local_only</div>
+							</div>
+						</li>
+					</ul>
+				</div>
+
+				<div class="jsdw-card jsdw-dashboard-actions">
+					<div class="jsdw-card__title">Quick links</div>
+					<div class="jsdw-dashboard-actions__row">
+						<a class="button jsdw-dashboard-action" href="#">Review sources</a>
+						<a class="button jsdw-dashboard-action" href="#">Open jobs &amp; logs</a>
+						<a class="button jsdw-dashboard-action" href="#">Open plugin settings</a>
+					</div>
+				</div>
+
+				<p class="jsdw-dashboard-footnote">Plugin 1.0.0 · Schema 1.2.0</p>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

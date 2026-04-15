@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Sources page preview — JSDW AI Chat</title>
+	<style>
+		:root {
+			--bg: #12121a;
+			--surface: #1a1a24;
+			--border: #32323e;
+			--text: #e8e8ed;
+			--muted: #9b9ba8;
+			--accent: #a78bfa;
+			--ok: #22c55e;
+			--warn: #eab308;
+			--err: #ef4444;
+			--font: "Instrument Sans", system-ui, -apple-system, sans-serif;
+		}
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			padding: 24px;
+			font-family: var(--font);
+			background: var(--bg);
+			color: var(--text);
+			font-size: 14px;
+			line-height: 1.45;
+		}
+		h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 8px; }
+		.sub { color: var(--muted); margin: 0 0 24px; max-width: 720px; }
+		.summary {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+			gap: 12px;
+			margin-bottom: 20px;
+		}
+		.stat {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 12px 14px;
+		}
+		.stat-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+		.stat-value { font-size: 1.75rem; font-weight: 600; margin: 4px 0; }
+		.stat-meta { font-size: 0.75rem; color: var(--muted); }
+		.toolbar {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			padding: 12px 14px;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			background: #1e1e24;
+			margin-bottom: 16px;
+		}
+		.btn {
+			display: inline-block;
+			padding: 6px 12px;
+			border-radius: 4px;
+			border: 1px solid var(--border);
+			background: #2a2a34;
+			color: var(--text);
+			font-size: 0.8125rem;
+			font-weight: 600;
+			cursor: default;
+		}
+		.btn-primary { background: #4c1d95; border-color: #6d28d9; color: #fff; }
+		.filters {
+			padding: 12px 14px;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			margin-bottom: 16px;
+		}
+		.filters-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+			gap: 10px;
+			align-items: end;
+		}
+		label span { display: block; font-size: 0.8125rem; font-weight: 500; margin-bottom: 4px; }
+		select, input[type="text"] {
+			width: 100%;
+			padding: 6px 8px;
+			border-radius: 4px;
+			border: 1px solid var(--border);
+			background: var(--surface);
+			color: var(--text);
+			font-size: 0.8125rem;
+		}
+		.note { font-size: 0.8125rem; color: var(--muted); margin: 0 0 12px; }
+		.scroll {
+			max-width: 100%;
+			overflow-x: auto;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+		}
+		table {
+			width: 100%;
+			min-width: 720px;
+			border-collapse: collapse;
+			table-layout: fixed;
+		}
+		th {
+			text-align: left;
+			padding: 10px 12px;
+			font-size: 0.75rem;
+			text-transform: uppercase;
+			letter-spacing: 0.02em;
+			color: var(--muted);
+			border-bottom: 1px solid var(--border);
+		}
+		td {
+			padding: 10px 12px;
+			vertical-align: top;
+			font-size: 0.8125rem;
+		}
+		tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+		.title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+		.meta { font-size: 0.75rem; color: var(--muted); margin: 4px 0; }
+		.url { display: block; font-size: 0.75rem; color: #7a7a88; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+		.badge {
+			display: inline-block;
+			padding: 2px 8px;
+			margin: 0 4px 4px 0;
+			border-radius: 6px;
+			font-size: 0.6875rem;
+			font-weight: 600;
+			background: rgba(139, 92, 246, 0.15);
+		}
+		.badge-ok { background: rgba(34, 197, 94, 0.18); }
+		.badge-warn { background: rgba(234, 179, 8, 0.2); }
+		.badge-err { background: rgba(239, 68, 68, 0.2); }
+		.pipeline-line { margin: 6px 0 0; font-size: 0.75rem; color: var(--muted); }
+		.actions .btn { margin-bottom: 6px; display: block; width: 100%; text-align: center; }
+		.foot { margin-top: 16px; font-size: 0.8125rem; color: var(--muted); max-width: 720px; }
+	</style>
+</head>
+<body>
+	<h1>Source registry (preview)</h1>
+	<p class="sub">Standalone mock of the improved Sources management UI: summary cards, toolbar actions, filters, responsive scroll table, pipeline badges, and row actions. Not connected to WordPress.</p>
+
+	<div class="summary">
+		<div class="stat">
+			<div class="stat-label">Total sources</div>
+			<div class="stat-value">42</div>
+			<div class="stat-meta">All rows in registry</div>
+		</div>
+		<div class="stat">
+			<div class="stat-label">Pending reindex</div>
+			<div class="stat-value">3</div>
+			<div class="stat-meta">Flagged needs_reindex</div>
+		</div>
+		<div class="stat">
+			<div class="stat-label">Content pending</div>
+			<div class="stat-value">8</div>
+			<div class="stat-meta">Awaiting extraction</div>
+		</div>
+		<div class="stat">
+			<div class="stat-label">Knowledge pending</div>
+			<div class="stat-value">5</div>
+			<div class="stat-meta">Chunks/facts not ready</div>
+		</div>
+		<div class="stat">
+			<div class="stat-label">Failed (any)</div>
+			<div class="stat-value">1</div>
+			<div class="stat-meta">Content or knowledge</div>
+		</div>
+		<div class="stat">
+			<div class="stat-label">Queue jobs</div>
+			<div class="stat-value">4</div>
+			<div class="stat-meta"><span style="color:var(--accent)">View jobs →</span></div>
+		</div>
+	</div>
+
+	<div class="toolbar">
+		<span class="btn btn-primary">Queue full resync</span>
+		<span class="btn">Queue content (up to 20)</span>
+		<span class="btn">Queue knowledge (up to 20)</span>
+		<span class="btn">Run queue now</span>
+		<span class="btn">Jobs &amp; logs</span>
+		<span class="btn">Plugin settings</span>
+	</div>
+
+	<div class="filters">
+		<div class="filters-grid">
+			<label><span>Source type</span><input type="text" placeholder="post, page…" /></label>
+			<label><span>Lifecycle</span><select><option>Any lifecycle</option><option>Active</option><option>Excluded</option></select></label>
+			<label><span>Content</span><select><option>Any content state</option><option>Content: pending</option><option>Content: OK</option></select></label>
+			<label><span>Knowledge</span><select><option>Any knowledge state</option><option>Knowledge: pending</option><option>Knowledge: ready</option></select></label>
+			<label><span>&nbsp;</span><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" /> Failed only</label></label>
+			<label><span>Needs reindex</span><select><option>Any</option><option>Yes</option><option>No</option></select></label>
+			<label><span>&nbsp;</span><span class="btn btn-primary" style="display:inline-block;width:auto;">Apply filters</span></label>
+		</div>
+	</div>
+
+	<p class="note">Visibility snapshot: 30 public · 10 internal · 2 admin-only · Lifecycle totals: active: 38 · excluded: 4</p>
+
+	<div class="scroll">
+		<table>
+			<thead>
+				<tr>
+					<th style="width:22%">Source</th>
+					<th style="width:32%">Pipeline</th>
+					<th style="width:12%">Access</th>
+					<th style="width:10%">Chunks / facts</th>
+					<th style="width:12%">Last activity</th>
+					<th style="width:12%">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>
+						<div class="title">About our studio</div>
+						<p class="meta">ID 12 · page</p>
+						<span class="url" title="https://example.com/about/">https://example.com/about/</span>
+					</td>
+					<td>
+						<span class="badge badge-ok">Active</span>
+						<span class="badge badge-ok">Content: OK</span>
+						<span class="badge badge-ok">Knowledge: Ready</span>
+						<p class="pipeline-line">Content and knowledge are up to date.</p>
+					</td>
+					<td>
+						<span class="badge">Public</span>
+						<p class="meta">Authority 50</p>
+					</td>
+					<td>14 / 6</td>
+					<td>2026-03-30 18:22:01</td>
+					<td class="actions">
+						<span class="btn">Queue content</span>
+						<span class="btn">Queue knowledge</span>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<div class="title">Services overview</div>
+						<p class="meta">ID 18 · page</p>
+						<span class="url" title="https://example.com/services/">https://example.com/services/</span>
+					</td>
+					<td>
+						<span class="badge badge-ok">Active</span>
+						<span class="badge badge-warn">Content: Pending</span>
+						<span class="badge badge-warn">Knowledge: Pending</span>
+						<p class="pipeline-line">Waiting for content extraction (queued or next cron run).</p>
+					</td>
+					<td>
+						<span class="badge">Internal</span>
+						<p class="meta">Authority 50</p>
+					</td>
+					<td>0 / 0</td>
+					<td>2026-03-29 09:10:44</td>
+					<td class="actions">
+						<span class="btn">Queue content</span>
+						<span class="btn" style="opacity:0.45">Queue knowledge</span>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<div class="title">Draft landing (internal)</div>
+						<p class="meta">ID 22 · post</p>
+						<span class="url">—</span>
+					</td>
+					<td>
+						<span class="badge badge-err">Excluded</span>
+						<span class="badge badge-neutral">Content: Unavailable</span>
+						<span class="badge badge-warn">Knowledge: Pending</span>
+						<p class="pipeline-line">Lifecycle: Excluded (not in the active processing queue).</p>
+					</td>
+					<td>
+						<span class="badge">Admin only</span>
+						<p class="meta">Authority 40</p>
+					</td>
+					<td>0 / 0</td>
+					<td>2026-03-28 14:00:00</td>
+					<td class="actions">
+						<span class="btn">Queue content</span>
+						<span class="btn" style="opacity:0.45">Queue knowledge</span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<p class="foot">If rows stay in content pending, ensure WP-Cron runs or use Run queue now. This HTML is for visual review only.</p>
+</body>
+</html>
