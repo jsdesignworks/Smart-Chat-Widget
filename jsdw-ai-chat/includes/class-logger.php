@@ -8,6 +8,26 @@ class JSDW_AI_Chat_Logger {
 	const LEVELS = array( 'debug', 'info', 'warning', 'error', 'critical' );
 
 	/**
+	 * Substrings (case-insensitive) that mark a context-array key as sensitive.
+	 * Matching values are replaced with '***' before JSON-encoding for storage.
+	 * Extend via the `jsdw_ai_chat_log_redacted_keys` filter.
+	 */
+	const REDACTED_KEY_PATTERNS = array(
+		'api_key',
+		'apikey',
+		'authorization',
+		'auth_token',
+		'access_token',
+		'refresh_token',
+		'bearer',
+		'secret',
+		'password',
+		'passwd',
+		'cookie',
+		'session_key',
+	);
+
+	/**
 	 * @var JSDW_AI_Chat_DB
 	 */
 	private $db;
@@ -49,7 +69,7 @@ class JSDW_AI_Chat_Logger {
 				return;
 			}
 
-			$encoded_context = wp_json_encode( $context );
+			$encoded_context = wp_json_encode( self::redact_context( $context ) );
 			if ( false === $encoded_context ) {
 				$encoded_context = '{}';
 			}
@@ -102,6 +122,51 @@ class JSDW_AI_Chat_Logger {
 
 	public function error( $event_type, $message, $context = array() ) {
 		$this->log( 'error', $event_type, $message, $context );
+	}
+
+	/**
+	 * Recursively replace values whose key matches a redacted pattern.
+	 * Non-array, non-object values are returned unchanged. Objects are
+	 * cast to arrays so they can be walked; the original is not mutated.
+	 *
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	private static function redact_context( $value ) {
+		if ( is_object( $value ) ) {
+			$value = (array) $value;
+		}
+		if ( ! is_array( $value ) ) {
+			return $value;
+		}
+
+		/** @var string[] $patterns */
+		$patterns = (array) apply_filters( 'jsdw_ai_chat_log_redacted_keys', self::REDACTED_KEY_PATTERNS );
+		$patterns = array_filter( array_map( 'strtolower', array_map( 'strval', $patterns ) ) );
+
+		$out = array();
+		foreach ( $value as $key => $inner ) {
+			if ( is_string( $key ) && self::key_is_sensitive( $key, $patterns ) ) {
+				$out[ $key ] = '***';
+				continue;
+			}
+			$out[ $key ] = self::redact_context( $inner );
+		}
+		return $out;
+	}
+
+	/**
+	 * @param string   $key
+	 * @param string[] $patterns Lowercased patterns.
+	 */
+	private static function key_is_sensitive( $key, array $patterns ) {
+		$lc = strtolower( $key );
+		foreach ( $patterns as $needle ) {
+			if ( '' !== $needle && false !== strpos( $lc, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

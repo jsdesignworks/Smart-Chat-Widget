@@ -241,9 +241,13 @@ class JSDW_AI_Chat_Settings {
 		$clean['features']['cleanup_on_uninstall']      = ! empty( $clean['features']['cleanup_on_uninstall'] );
 		$clean['ai']['provider']                        = JSDW_AI_Chat_AI_Provider_Status::sanitize_provider( $clean['ai']['provider'] ?? '' );
 		$key_in                                         = isset( $clean['ai']['openai_api_key'] ) ? (string) $clean['ai']['openai_api_key'] : '';
-		$key_in                                         = trim( str_replace( array( "\r", "\n" ), '', $key_in ) );
-		if ( strlen( $key_in ) > 256 ) {
-			$key_in = substr( $key_in, 0, 256 );
+		// Already-encrypted values (re-saving unchanged settings) skip re-encryption.
+		if ( ! JSDW_AI_Chat_Secret_Store::is_encrypted( $key_in ) ) {
+			$key_in = trim( str_replace( array( "\r", "\n" ), '', $key_in ) );
+			if ( strlen( $key_in ) > 256 ) {
+				$key_in = substr( $key_in, 0, 256 );
+			}
+			$key_in = JSDW_AI_Chat_Secret_Store::encrypt( $key_in );
 		}
 		$clean['ai']['openai_api_key']                  = $key_in;
 		$model_in                                       = isset( $clean['ai']['openai_model'] ) ? (string) $clean['ai']['openai_model'] : '';

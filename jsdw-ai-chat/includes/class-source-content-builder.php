@@ -198,11 +198,10 @@ class JSDW_AI_Chat_Source_Content_Builder {
 			return $this->unsupported( JSDW_AI_Chat_DB::CONTENT_REASON_UNSUPPORTED_TYPE );
 		}
 
-		$response = wp_remote_get(
+		$response = JSDW_AI_Chat_URL_Safety::safe_remote_get(
 			$url,
 			array(
 				'timeout' => 15,
-				'redirection' => 3,
 			)
 		);
 		if ( is_wp_error( $response ) ) {

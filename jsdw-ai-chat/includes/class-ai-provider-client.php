@@ -65,7 +65,7 @@ class JSDW_AI_Chat_AI_Provider_Client {
 			$r = $this->openai->refine_phrase(
 				$local_answer,
 				$tone,
-				(string) ( $ai['openai_api_key'] ?? '' ),
+				JSDW_AI_Chat_Secret_Store::decrypt( (string) ( $ai['openai_api_key'] ?? '' ) ),
 				(string) ( $ai['openai_model'] ?? JSDW_AI_Chat_AI_Provider_OpenAI::DEFAULT_MODEL )
 			);
 			$r['provider'] = 'openai';

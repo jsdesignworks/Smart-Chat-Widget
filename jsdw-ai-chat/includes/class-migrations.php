@@ -128,6 +128,26 @@ class JSDW_AI_Chat_Migrations {
 			}
 		}
 
+		if ( version_compare( (string) $stored_version, '1.11.0', '<' ) ) {
+			$settings = get_option( JSDW_AI_CHAT_OPTION_SETTINGS, null );
+			if ( is_array( $settings ) && isset( $settings['ai'] ) && is_array( $settings['ai'] ) ) {
+				$changed = false;
+				foreach ( array( 'openai_api_key', 'anthropic_api_key', 'google_api_key' ) as $field ) {
+					if ( isset( $settings['ai'][ $field ] ) ) {
+						$current = (string) $settings['ai'][ $field ];
+						if ( '' !== $current && ! JSDW_AI_Chat_Secret_Store::is_encrypted( $current ) ) {
+							$settings['ai'][ $field ] = JSDW_AI_Chat_Secret_Store::encrypt( $current );
+							$changed = true;
+						}
+					}
+				}
+				if ( $changed ) {
+					update_option( JSDW_AI_CHAT_OPTION_SETTINGS, $settings, false );
+					$this->logger->info( 'migration_secrets_encrypted', 'Provider API keys encrypted at rest.' );
+				}
+			}
+		}
+
 		update_option( JSDW_AI_CHAT_OPTION_DB_SCHEMA_VERSION, $target_version, false );
 		$this->logger->info( 'migration_finished', 'Schema migration finished.', array( 'to' => $target_version ) );
 	}

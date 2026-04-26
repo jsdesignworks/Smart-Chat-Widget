@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'JSDW_AI_CHAT_VERSION', '1.10.0' );
-define( 'JSDW_AI_CHAT_DB_SCHEMA_VERSION', '1.10.0' );
+define( 'JSDW_AI_CHAT_DB_SCHEMA_VERSION', '1.11.0' );
 define( 'JSDW_AI_CHAT_SLUG', 'jsdw-ai-chat' );
 define( 'JSDW_AI_CHAT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'JSDW_AI_CHAT_URL', plugin_dir_url( __FILE__ ) );
@@ -39,6 +39,7 @@ define( 'JSDW_AI_CHAT_USER_META_ADMIN_UI_MODE', 'jsdw_ai_chat_admin_ui_mode' );
 require_once JSDW_AI_CHAT_PATH . 'includes/class-loader.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-container.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-db.php';
+require_once JSDW_AI_CHAT_PATH . 'includes/class-secret-store.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-knowledge-constants.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-source-visibility.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-public-response-policy.php';
@@ -50,6 +51,7 @@ require_once JSDW_AI_CHAT_PATH . 'includes/class-ai-provider-anthropic.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-ai-provider-google.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-ai-provider-client.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-capabilities.php';
+require_once JSDW_AI_CHAT_PATH . 'includes/class-url-safety.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-security.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-job-repository.php';
 require_once JSDW_AI_CHAT_PATH . 'includes/class-source-rules.php';
