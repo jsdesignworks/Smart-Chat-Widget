@@ -3,7 +3,7 @@
  * Plugin Name: JSDW AI Chat
  * Plugin URI: https://example.com
  * Description: Backend foundation for JSDW AI Chat knowledge and operations engine.
- * Version: 1.1.0
+ * Version: 1.10.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: JSDW
@@ -14,8 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JSDW_AI_CHAT_VERSION', '1.1.0' );
-define( 'JSDW_AI_CHAT_DB_SCHEMA_VERSION', '1.7.0' );
+define( 'JSDW_AI_CHAT_VERSION', '1.10.0' );
+define( 'JSDW_AI_CHAT_DB_SCHEMA_VERSION', '1.10.0' );
 define( 'JSDW_AI_CHAT_SLUG', 'jsdw-ai-chat' );
 define( 'JSDW_AI_CHAT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'JSDW_AI_CHAT_URL', plugin_dir_url( __FILE__ ) );

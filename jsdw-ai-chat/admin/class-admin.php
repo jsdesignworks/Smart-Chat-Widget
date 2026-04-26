@@ -4,6 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once dirname( __FILE__ ) . '/helpers/admin-ui.php';
+
 class JSDW_AI_Chat_Admin {
 	/**
 	 * @var JSDW_AI_Chat_Health
@@ -136,9 +138,11 @@ class JSDW_AI_Chat_Admin {
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_foundation_assets' ), 5 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_sources_assets' ), 12 );
+		add_action( 'wp_ajax_jsdw_ai_chat_source_inspector', array( $this, 'ajax_source_inspector' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_dashboard_assets' ), 15 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_conversations_inbox_assets' ), 16 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_design_studio_assets' ), 10 );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_settings_tabs_assets' ), 14 );
 		add_filter( 'admin_body_class', array( $this, 'admin_plugin_body_class' ) );
 	}
 
@@ -390,6 +394,126 @@ class JSDW_AI_Chat_Admin {
 			array( 'jsdw-ai-chat-admin-shell' ),
 			$ver
 		);
+
+		if ( ! current_user_can( 'manage_ai_chat_widget_index' ) ) {
+			return;
+		}
+
+		$js_path = JSDW_AI_CHAT_PATH . 'admin/js/sources-inspector.js';
+		$js_ver  = JSDW_AI_CHAT_VERSION;
+		if ( file_exists( $js_path ) ) {
+			$js_ver .= '.' . (string) filemtime( $js_path );
+		}
+		wp_enqueue_script(
+			'jsdw-ai-chat-sources-inspector',
+			JSDW_AI_CHAT_URL . 'admin/js/sources-inspector.js',
+			array( 'jquery' ),
+			$js_ver,
+			true
+		);
+		wp_localize_script(
+			'jsdw-ai-chat-sources-inspector',
+			'jsdwSourcesInspector',
+			array(
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'jsdw_source_inspector' ),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: HTML fragment for per-source inspector (logs + pipeline snapshot).
+	 */
+	public function ajax_source_inspector() {
+		check_ajax_referer( 'jsdw_source_inspector', 'nonce' );
+		if ( ! current_user_can( 'manage_ai_chat_widget_index' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'jsdw-ai-chat' ) ) );
+		}
+		$sid = isset( $_POST['source_id'] ) ? absint( wp_unslash( (string) $_POST['source_id'] ) ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		if ( $sid <= 0 ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid source.', 'jsdw-ai-chat' ) ) );
+		}
+		$row = $this->source_repository->get_source_by_id( $sid );
+		if ( ! is_array( $row ) ) {
+			wp_send_json_error( array( 'message' => __( 'Source not found.', 'jsdw-ai-chat' ) ) );
+		}
+		$chunks = $this->chunk_repository->count_active_chunks_by_source( $sid );
+		$facts  = $this->fact_repository->count_active_facts_by_source( $sid );
+		$logs   = $this->logger->get_recent_log_rows_for_source( $sid, 3 );
+
+		ob_start();
+		?>
+		<div class="jsdw-source-inspector-fragment">
+			<p class="jsdw-source-inspector-lead"><?php echo esc_html( JSDW_AI_Chat_Source_Admin_Presenter::get_pipeline_summary( $row, $chunks, $facts ) ); ?></p>
+			<dl class="jsdw-source-inspector-dl">
+				<dt><?php echo esc_html__( 'Eligibility', 'jsdw-ai-chat' ); ?></dt>
+				<dd><?php echo esc_html( JSDW_AI_Chat_Source_Admin_Presenter::label_eligibility_status( $row ) ); ?>
+					<?php
+					$erc = JSDW_AI_Chat_Source_Admin_Presenter::label_eligibility_reason_code( $row );
+					if ( '' !== $erc ) {
+						echo ' — <span class="jsdw-source-inspector-muted">' . esc_html( $erc ) . '</span>';
+					}
+					?>
+					<?php if ( ! empty( $row['eligibility_matched_rule'] ) ) : ?>
+						<br /><span class="jsdw-source-inspector-muted"><?php echo esc_html( (string) $row['eligibility_matched_rule'] ); ?></span>
+					<?php endif; ?>
+					<?php if ( ! empty( $row['eligibility_evaluated_gmt'] ) ) : ?>
+						<br /><span class="jsdw-source-inspector-muted"><?php echo esc_html( (string) $row['eligibility_evaluated_gmt'] ); ?> GMT</span>
+					<?php endif; ?>
+				</dd>
+				<dt><?php echo esc_html__( 'Content', 'jsdw-ai-chat' ); ?></dt>
+				<dd><?php echo esc_html( JSDW_AI_Chat_Source_Admin_Presenter::label_content_status( $row ) ); ?> — <?php echo esc_html( JSDW_AI_Chat_Source_Admin_Presenter::label_content_reason( $row ) ); ?>
+					<?php
+					$cg = JSDW_AI_Chat_Source_Admin_Presenter::content_processing_reason_guidance( $row );
+					if ( '' !== $cg ) {
+						echo '<br /><span class="jsdw-source-inspector-hint">' . esc_html( $cg ) . '</span>';
+					}
+					?>
+				</dd>
+				<dt><?php echo esc_html__( 'Knowledge', 'jsdw-ai-chat' ); ?></dt>
+				<dd><?php echo esc_html( JSDW_AI_Chat_Source_Admin_Presenter::label_knowledge_status( $row ) ); ?> — <?php echo esc_html( JSDW_AI_Chat_Source_Admin_Presenter::label_knowledge_reason( $row ) ); ?>
+					<?php
+					$kg = JSDW_AI_Chat_Source_Admin_Presenter::knowledge_processing_reason_guidance( $row );
+					if ( '' !== $kg ) {
+						echo '<br /><span class="jsdw-source-inspector-hint">' . esc_html( $kg ) . '</span>';
+					}
+					?>
+				</dd>
+				<dt><?php echo esc_html__( 'Index size', 'jsdw-ai-chat' ); ?></dt>
+				<dd><?php echo esc_html( sprintf( /* translators: 1: chunks, 2: facts */ __( '%1$d chunks · %2$d facts', 'jsdw-ai-chat' ), $chunks, $facts ) ); ?></dd>
+				<dt><?php echo esc_html__( 'Extracted text', 'jsdw-ai-chat' ); ?></dt>
+				<dd><?php echo esc_html( JSDW_AI_Chat_Source_Admin_Presenter::format_normalized_length( $row ) ); ?>
+					<?php if ( ! empty( $row['extraction_method'] ) ) : ?>
+						<span class="jsdw-source-inspector-muted"> — <?php echo esc_html( (string) $row['extraction_method'] ); ?></span>
+					<?php endif; ?>
+				</dd>
+			</dl>
+			<p class="jsdw-source-inspector-subhead"><?php echo esc_html__( 'Recent log lines (this source)', 'jsdw-ai-chat' ); ?></p>
+			<?php if ( empty( $logs ) ) : ?>
+				<p class="jsdw-source-inspector-muted"><?php echo esc_html__( 'No matching log rows yet (logging uses JSON context with source_id).', 'jsdw-ai-chat' ); ?></p>
+			<?php else : ?>
+				<ul class="jsdw-source-inspector-logs">
+					<?php foreach ( $logs as $log ) : ?>
+						<?php
+						if ( ! is_array( $log ) ) {
+							continue;
+						}
+						$lev = isset( $log['level'] ) ? (string) $log['level'] : '';
+						$evt = isset( $log['event_type'] ) ? (string) $log['event_type'] : '';
+						$msg = isset( $log['message'] ) ? (string) $log['message'] : '';
+						$ca  = isset( $log['created_at'] ) ? (string) $log['created_at'] : '';
+						?>
+						<li><span class="jsdw-source-inspector-muted"><?php echo esc_html( $ca ); ?></span>
+							<strong><?php echo esc_html( $lev ); ?></strong> <?php echo esc_html( $evt ); ?> —
+							<?php echo esc_html( $msg ); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
+			<p class="jsdw-source-inspector-footnote"><?php echo esc_html__( 'If knowledge is ready but chunks are zero, the stored body may still be empty after extraction; check the public page or builder output.', 'jsdw-ai-chat' ); ?></p>
+		</div>
+		<?php
+		$html = (string) ob_get_clean();
+		wp_send_json_success( array( 'html' => $html ) );
 	}
 
 	/**
@@ -463,6 +587,29 @@ class JSDW_AI_Chat_Admin {
 		);
 	}
 
+	/**
+	 * Settings page: responsive tab bar (single form; panels toggled in JS).
+	 *
+	 * @param string $hook_suffix Current admin page hook.
+	 */
+	public function enqueue_settings_tabs_assets( $hook_suffix ) {
+		if ( 'jsdw-ai-chat-dashboard_page_jsdw-ai-chat-settings' !== $hook_suffix ) {
+			return;
+		}
+		$path = JSDW_AI_CHAT_PATH . 'admin/js/settings-tabs.js';
+		$ver  = JSDW_AI_CHAT_VERSION;
+		if ( file_exists( $path ) ) {
+			$ver .= '.' . (string) filemtime( $path );
+		}
+		wp_enqueue_script(
+			'jsdw-ai-chat-settings-tabs',
+			JSDW_AI_CHAT_URL . 'admin/js/settings-tabs.js',
+			array(),
+			$ver,
+			true
+		);
+	}
+
 	public function enqueue_dashboard_assets( $hook_suffix ) {
 		if ( 'toplevel_page_jsdw-ai-chat-dashboard' !== $hook_suffix ) {
 			return;
@@ -518,6 +665,8 @@ class JSDW_AI_Chat_Admin {
 				$merged = $this->merge_settings_from_request( $this->settings->get_all(), $post );
 				$clean  = $this->settings->sanitize_settings( $merged );
 				update_option( JSDW_AI_CHAT_OPTION_SETTINGS, $clean, false );
+				$this->source_registry->queue_eligibility_revalidation();
+				$this->logger->info( 'eligibility_revalidation_queued', 'Queued source eligibility revalidation after settings save.' );
 				add_settings_error(
 					'jsdw_ai_chat',
 					'jsdw_settings_save',
@@ -561,6 +710,7 @@ class JSDW_AI_Chat_Admin {
 			if ( isset( $c['answer_mode'] ) ) {
 				$current['chat']['answer_mode'] = sanitize_text_field( (string) $c['answer_mode'] );
 			}
+			$current['chat']['require_visitor_identity_for_handoff'] = ! empty( $c['require_visitor_identity_for_handoff'] );
 			$current['chat']['allow_public_query_endpoint'] = ! empty( $c['allow_public_query_endpoint'] );
 			$current['chat']['allow_ai_phrase_assist']      = ! empty( $c['allow_ai_phrase_assist'] );
 			$current['chat']['debug_trace_enabled']         = ! empty( $c['debug_trace_enabled'] );
@@ -571,6 +721,9 @@ class JSDW_AI_Chat_Admin {
 			}
 			if ( isset( $c['max_query_length'] ) ) {
 				$current['chat']['max_query_length'] = absint( $c['max_query_length'] );
+			}
+			if ( isset( $c['query_throttle_per_minute'] ) ) {
+				$current['chat']['query_throttle_per_minute'] = absint( $c['query_throttle_per_minute'] );
 			}
 			if ( isset( $c['answer_style'] ) ) {
 				$current['chat']['answer_style'] = sanitize_text_field( (string) $c['answer_style'] );
@@ -647,10 +800,16 @@ class JSDW_AI_Chat_Admin {
 			wp_die( esc_html__( 'Insufficient permissions.', 'jsdw-ai-chat' ) );
 		}
 		$health_report = $this->health->get_report();
+		$recent_logs   = $this->logger->get_recent_log_rows( 25 );
+		$url_sources   = admin_url( 'admin.php?page=jsdw-ai-chat-sources' );
+		$url_settings  = admin_url( 'admin.php?page=jsdw-ai-chat-settings' );
 		$this->render_admin_shell(
 			JSDW_AI_CHAT_PATH . 'admin/views/page-jobs.php',
 			array(
 				'health_report' => $health_report,
+				'recent_logs'   => $recent_logs,
+				'url_sources'   => $url_sources,
+				'url_settings'  => $url_settings,
 			)
 		);
 	}
@@ -660,9 +819,10 @@ class JSDW_AI_Chat_Admin {
 			wp_die( esc_html__( 'Insufficient permissions.', 'jsdw-ai-chat' ) );
 		}
 
-		$nonce_action = 'jsdw_ai_chat_sources_action';
-		$nonce_name   = 'jsdw_ai_chat_sources_nonce';
-		$notice       = '';
+		$nonce_action       = 'jsdw_ai_chat_sources_action';
+		$nonce_name         = 'jsdw_ai_chat_sources_nonce';
+		$notice             = '';
+		$eligibility_preview = null;
 
 		if ( 'POST' === $_SERVER['REQUEST_METHOD'] && isset( $_POST[ $nonce_name ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$valid = JSDW_AI_Chat_Security::verify_nonce( (string) $_POST[ $nonce_name ], $nonce_action ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -715,6 +875,116 @@ class JSDW_AI_Chat_Admin {
 					spawn_cron();
 				}
 				$notice = __( 'Queue runner executed once. Background cron was nudged if available.', 'jsdw-ai-chat' );
+			} elseif ( isset( $_POST['jsdw_eligibility_preview'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				$rules            = new JSDW_AI_Chat_Source_Rules();
+				$discovery_engine = new JSDW_AI_Chat_Source_Discovery( $this->settings, $rules, $this->source_repository );
+				$preview_url      = isset( $_POST['jsdw_preview_url'] ) ? esc_url_raw( trim( wp_unslash( (string) $_POST['jsdw_preview_url'] ) ) ) : '';
+				$preview_pid      = isset( $_POST['jsdw_preview_post_id'] ) ? absint( wp_unslash( (string) $_POST['jsdw_preview_post_id'] ) ) : 0;
+				$settings_all     = $this->settings->get_all();
+				$candidate        = null;
+				$preview_label    = '';
+				if ( $preview_pid > 0 ) {
+					$cands = $discovery_engine->discover_single_post( $preview_pid );
+					if ( ! empty( $cands[0] ) && is_array( $cands[0] ) ) {
+						$candidate     = $cands[0];
+						$preview_label = isset( $candidate['title'] ) ? (string) $candidate['title'] : (string) $preview_pid;
+					} else {
+						$notice = __( 'Post not found or does not produce a source candidate.', 'jsdw-ai-chat' );
+					}
+				} elseif ( '' !== $preview_url ) {
+					$maybe_id = url_to_postid( $preview_url );
+					if ( $maybe_id > 0 ) {
+						$cands = $discovery_engine->discover_single_post( $maybe_id );
+						if ( ! empty( $cands[0] ) && is_array( $cands[0] ) ) {
+							$candidate     = $cands[0];
+							$preview_label = isset( $candidate['title'] ) ? (string) $candidate['title'] : $preview_url;
+						}
+					}
+					if ( null === $candidate ) {
+						$preview_label = $preview_url;
+						$candidate     = array(
+							'source_type'          => 'rendered_url',
+							'source_object_id'     => null,
+							'source_key'           => 'admin_preview:' . md5( $preview_url ),
+							'source_url'           => $preview_url,
+							'title'                => __( 'URL preview', 'jsdw-ai-chat' ),
+							'last_wp_modified_gmt' => current_time( 'mysql', true ),
+							'discovery_context'    => array( 'origin' => 'admin_preview' ),
+							'visibility_flags'     => array(),
+						);
+					}
+				} else {
+					$notice = __( 'Enter a URL or numeric post ID to preview rules eligibility (nothing was saved).', 'jsdw-ai-chat' );
+				}
+				if ( is_array( $candidate ) ) {
+					$decision = $rules->evaluate_candidate( $candidate, $settings_all );
+					$decision = is_array( $decision ) ? $decision : array();
+					if ( '' === $preview_label ) {
+						$preview_label = isset( $candidate['title'] ) ? (string) $candidate['title'] : __( '(preview)', 'jsdw-ai-chat' );
+					}
+					$decision['preview_for'] = $preview_label;
+					$eligibility_preview     = $decision;
+				}
+			} elseif ( isset( $_POST['jsdw_rediscover_missing'] ) && isset( $_POST['jsdw_source_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				$sid = absint( wp_unslash( (string) $_POST['jsdw_source_id'] ) );
+				if ( $sid > 0 ) {
+					$srow = $this->source_repository->get_source_by_id( $sid );
+					if ( ! is_array( $srow ) || JSDW_AI_Chat_DB::SOURCE_STATUS_MISSING !== (string) ( $srow['status'] ?? '' ) ) {
+						$notice = __( 'That source is not in the missing lifecycle state.', 'jsdw-ai-chat' );
+					} else {
+						$oid = isset( $srow['source_object_id'] ) ? absint( $srow['source_object_id'] ) : 0;
+						if ( $oid > 0 ) {
+							$this->source_registry->queue_single_post( $oid );
+							$notice = __( 'Discovery queued for this linked post.', 'jsdw-ai-chat' );
+						} else {
+							$this->source_registry->queue_verify_missing();
+							$notice = __( 'Site-wide missing verification queued (runs a full discovery pass).', 'jsdw-ai-chat' );
+						}
+						$this->logger->info( 'admin_rediscover_missing', 'Admin re-discover for missing source.', array( 'source_id' => $sid ) );
+					}
+				}
+			} elseif ( isset( $_POST['jsdw_reenable_manual'] ) && isset( $_POST['jsdw_source_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				$sid = absint( wp_unslash( (string) $_POST['jsdw_source_id'] ) );
+				if ( $sid > 0 ) {
+					$res = $this->source_repository->reenable_disabled_manual_source( $sid );
+					if ( is_wp_error( $res ) ) {
+						$notice = $res->get_error_message();
+					} else {
+						$jid = $this->queue->add_job( JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_CONTENT_PROCESS, array( 'source_id' => $sid ), 14 );
+						if ( $jid > 0 ) {
+							$this->logger->info( 'admin_reenable_manual', 'Manual source re-enabled from Sources admin.', array( 'source_id' => $sid, 'job_id' => $jid ) );
+						}
+						$notice = __( 'Manual source re-enabled and content extraction queued.', 'jsdw-ai-chat' );
+					}
+				}
+			} elseif ( isset( $_POST['jsdw_activate_inactive'] ) && isset( $_POST['jsdw_source_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				$sid = absint( wp_unslash( (string) $_POST['jsdw_source_id'] ) );
+				if ( $sid > 0 ) {
+					$res = $this->source_repository->activate_inactive_source( $sid );
+					if ( is_wp_error( $res ) ) {
+						$notice = $res->get_error_message();
+					} else {
+						$jid = $this->queue->add_job( JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_CONTENT_PROCESS, array( 'source_id' => $sid ), 14 );
+						if ( $jid > 0 ) {
+							$this->logger->info( 'admin_activate_inactive', 'Inactive source activated from Sources admin.', array( 'source_id' => $sid, 'job_id' => $jid ) );
+						}
+						$notice = __( 'Source activated; content extraction queued.', 'jsdw-ai-chat' );
+					}
+				}
+			} elseif ( isset( $_POST['jsdw_queue_knowledge_force'] ) && isset( $_POST['jsdw_source_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				$sid = absint( wp_unslash( (string) $_POST['jsdw_source_id'] ) );
+				if ( $sid > 0 ) {
+					$srow = $this->source_repository->get_source_by_id( $sid );
+					if ( ! is_array( $srow ) || JSDW_AI_Chat_Knowledge_Constants::KNOWLEDGE_STATUS_FAILED !== (string) ( $srow['knowledge_processing_status'] ?? '' ) ) {
+						$notice = __( 'Forced knowledge retry is only available when knowledge status is failed.', 'jsdw-ai-chat' );
+					} else {
+						$jid = $this->queue->add_job( JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_KNOWLEDGE_PROCESS, array( 'source_id' => $sid, 'admin_force' => true ), 14 );
+						if ( $jid > 0 ) {
+							$this->logger->warning( 'knowledge_force_queued', 'Admin forced knowledge job despite normal pipeline gates (may re-fail until content is OK).', array( 'source_id' => $sid, 'job_id' => $jid ) );
+							$notice = __( 'Knowledge job queued (forced). Check Jobs if it fails again.', 'jsdw-ai-chat' );
+						}
+					}
+				}
 			} elseif ( isset( $_POST['jsdw_queue_content_one'] ) && isset( $_POST['jsdw_source_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 				$sid = absint( wp_unslash( (string) $_POST['jsdw_source_id'] ) );
 				if ( $sid > 0 ) {
@@ -722,6 +992,20 @@ class JSDW_AI_Chat_Admin {
 					if ( $jid > 0 ) {
 						$this->logger->info( 'content_queued', 'Content process job queued from Sources admin (single).', array( 'source_id' => $sid, 'job_id' => $jid ) );
 						$notice = __( 'Content processing queued for this source.', 'jsdw-ai-chat' );
+					}
+				}
+			} elseif ( isset( $_POST['jsdw_manual_include_source'] ) && isset( $_POST['jsdw_source_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				$sid = absint( wp_unslash( (string) $_POST['jsdw_source_id'] ) );
+				if ( $sid > 0 ) {
+					$res = $this->source_repository->manually_include_source( $sid );
+					if ( is_wp_error( $res ) ) {
+						$notice = $res->get_error_message();
+					} else {
+						$jid = $this->queue->add_job( JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_CONTENT_PROCESS, array( 'source_id' => $sid ), 14 );
+						if ( $jid > 0 ) {
+							$this->logger->info( 'manual_include_queued', 'Manual include + content job from Sources admin.', array( 'source_id' => $sid, 'job_id' => $jid ) );
+						}
+						$notice = __( 'Source marked active (manually included) and text extraction queued.', 'jsdw-ai-chat' );
 					}
 				}
 			} elseif ( isset( $_POST['jsdw_queue_knowledge_one'] ) && isset( $_POST['jsdw_source_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -802,6 +1086,17 @@ class JSDW_AI_Chat_Admin {
 		$pending_reindex = isset( $disc['pending_reindex'] ) ? absint( $disc['pending_reindex'] ) : 0;
 		$visibility_counts = $this->source_repository->get_access_visibility_counts();
 
+		$queue_pending_banner = isset( $health_report['queue']['pending'] ) ? absint( $health_report['queue']['pending'] ) : 0;
+		$last_cron_raw        = get_option( JSDW_AI_CHAT_OPTION_LAST_CRON_RUN, '' );
+		$last_cron_ts         = ( is_string( $last_cron_raw ) && '' !== $last_cron_raw ) ? strtotime( $last_cron_raw ) : false;
+		$sources_cron_stale   = false;
+		if ( is_int( $last_cron_ts ) && $last_cron_ts > 0 && ( time() - $last_cron_ts ) > 15 * MINUTE_IN_SECONDS ) {
+			$sources_cron_stale = true;
+		}
+		if ( ( ! is_int( $last_cron_ts ) || $last_cron_ts <= 0 ) && $queue_pending_banner > 0 ) {
+			$sources_cron_stale = true;
+		}
+
 		$this->render_admin_shell(
 			JSDW_AI_CHAT_PATH . 'admin/views/page-sources.php',
 			array(
@@ -825,6 +1120,9 @@ class JSDW_AI_Chat_Admin {
 				'total_sources'             => $total_sources,
 				'pending_reindex'           => $pending_reindex,
 				'visibility_counts'         => $visibility_counts,
+				'eligibility_preview'       => $eligibility_preview,
+				'sources_cron_stale'        => $sources_cron_stale,
+				'url_system_info'           => admin_url( 'admin.php?page=jsdw-ai-chat-system-info' ),
 			)
 		);
 	}

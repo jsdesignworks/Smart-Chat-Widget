@@ -3,7 +3,7 @@
  * Phase 4: deterministic text chunking from normalized Phase-3 content.
  *
  * Strategy (see make_chunk_row for hashes):
- * - Paragraphs from body (blank-line split); optional title prepended to first paragraph.
+ * - Paragraphs from body (blank-line split); headings in body match headings[] in order to set chunk.heading.
  * - Paragraphs longer than CHUNK_MAX_CHARS are split (sentence boundary, then hard split).
  * - Greedy merge into chunks: grow buffer until adding next para would exceed CHUNK_MAX or buffer >= CHUNK_MIN and we need to close.
  *
@@ -30,9 +30,7 @@ class JSDW_AI_Chat_Content_Chunker {
 		$headings  = isset( $package['headings'] ) && is_array( $package['headings'] ) ? array_values( array_filter( array_map( 'trim', $package['headings'] ) ) ) : array();
 
 		$paragraphs = $this->split_paragraphs( $body );
-		if ( '' !== $title && ! empty( $paragraphs ) ) {
-			$paragraphs[0] = $title . "\n\n" . $paragraphs[0];
-		} elseif ( '' !== $title && empty( $paragraphs ) ) {
+		if ( '' !== $title && empty( $paragraphs ) ) {
 			$paragraphs = array( $title );
 		}
 
@@ -55,35 +53,48 @@ class JSDW_AI_Chat_Content_Chunker {
 			return array();
 		}
 
-		$chunks      = array();
-		$buffer      = '';
-		$chunk_index = 0;
+		$chunks         = array();
+		$buffer         = '';
+		$chunk_index    = 0;
+		$heading_idx    = 0;
+		$active_heading = '';
 
 		foreach ( $expanded as $para ) {
+			if ( $this->paragraph_is_next_document_heading( $para, $headings, $heading_idx ) ) {
+				if ( '' !== $buffer ) {
+					$chunks[] = $this->make_chunk_row( $buffer, $chunk_index, $title, $active_heading, $source_id, $version, $body );
+					++$chunk_index;
+					$buffer = '';
+				}
+				$active_heading = (string) $headings[ $heading_idx ];
+				++$heading_idx;
+				continue;
+			}
+
 			$candidate = '' === $buffer ? $para : $buffer . "\n\n" . $para;
 			if ( strlen( $candidate ) <= self::CHUNK_MAX_CHARS ) {
 				$buffer = $candidate;
 				if ( strlen( $buffer ) >= self::CHUNK_MIN_CHARS ) {
-					$chunks[] = $this->make_chunk_row( $buffer, $chunk_index, $title, $headings, $source_id, $version, $body );
+					$chunks[] = $this->make_chunk_row( $buffer, $chunk_index, $title, $active_heading, $source_id, $version, $body );
 					++$chunk_index;
 					$buffer = '';
 				}
 				continue;
 			}
 			if ( '' !== $buffer ) {
-				$chunks[] = $this->make_chunk_row( $buffer, $chunk_index, $title, $headings, $source_id, $version, $body );
+				$chunks[] = $this->make_chunk_row( $buffer, $chunk_index, $title, $active_heading, $source_id, $version, $body );
 				++$chunk_index;
 				$buffer   = '';
 			}
 			if ( strlen( $para ) >= self::CHUNK_MIN_CHARS ) {
-				$chunks[] = $this->make_chunk_row( $para, $chunk_index, $title, $headings, $source_id, $version, $body );
+				$chunks[] = $this->make_chunk_row( $para, $chunk_index, $title, $active_heading, $source_id, $version, $body );
 				++$chunk_index;
 			} else {
 				$buffer = $para;
 			}
 		}
 		if ( '' !== $buffer ) {
-			$chunks[] = $this->make_chunk_row( $buffer, $chunk_index, $title, $headings, $source_id, $version, $body );
+			$chunks[] = $this->make_chunk_row( $buffer, $chunk_index, $title, $active_heading, $source_id, $version, $body );
 		}
 
 		return $chunks;
@@ -91,19 +102,29 @@ class JSDW_AI_Chat_Content_Chunker {
 
 	/**
 	 * @param array<int,string> $headings
+	 */
+	private function paragraph_is_next_document_heading( $para, array $headings, $heading_idx ) {
+		if ( $heading_idx >= count( $headings ) ) {
+			return false;
+		}
+		$expected = isset( $headings[ $heading_idx ] ) ? (string) $headings[ $heading_idx ] : '';
+		if ( '' === $expected ) {
+			return false;
+		}
+		return $this->normalize_chunk_text( $para ) === $this->normalize_chunk_text( $expected );
+	}
+
+	/**
 	 * @return array<string,mixed>
 	 */
-	private function make_chunk_row( $text, $index, $title, array $headings, $source_id, $version, $body ) {
+	private function make_chunk_row( $text, $index, $title, $active_heading, $source_id, $version, $body ) {
 		$text = trim( (string) $text );
 		$norm = $this->normalize_chunk_text( $text );
 		$th   = hash( 'sha256', $norm );
 		$ch   = hash( 'sha256', $source_id . '|' . $version . '|' . $index . '|' . $th );
 		$tok  = max( 1, (int) ceil( strlen( $norm ) / 4 ) );
 
-		$heading = '';
-		if ( ! empty( $headings ) ) {
-			$heading = $headings[ $index % count( $headings ) ];
-		}
+		$heading = trim( (string) $active_heading );
 
 		$pos_start = null;
 		$pos_end   = null;
@@ -119,7 +140,7 @@ class JSDW_AI_Chat_Content_Chunker {
 		return array(
 			'chunk_index'     => $index,
 			'section_label'   => ( 0 === (int) $index && '' !== $title ) ? $title : null,
-			'heading'         => '' !== $heading ? $heading : null,
+			'heading'         => ( '' !== $heading ) ? $heading : null,
 			'raw_text'        => $text,
 			'normalized_text' => $norm,
 			'text_hash'       => $th,

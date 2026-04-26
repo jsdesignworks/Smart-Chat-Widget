@@ -279,6 +279,59 @@ class JSDW_AI_Chat_Conversation_Service {
 	}
 
 	/**
+	 * Store visitor name/email for a conversation (widget). Verifies session_key matches the row.
+	 *
+	 * @param int    $conversation_id Conversation id.
+	 * @param string $session_key     Session key from the widget.
+	 * @param string $display_name    Visitor display name.
+	 * @param string $email           Visitor email.
+	 * @return true|\WP_Error
+	 */
+	public function update_visitor_identity( $conversation_id, $session_key, $display_name, $email ) {
+		global $wpdb;
+		if ( ! ( $wpdb instanceof wpdb ) ) {
+			return new WP_Error( 'jsdw_ai_chat_db', __( 'Database unavailable.', 'jsdw-ai-chat' ), array( 'status' => 500 ) );
+		}
+		$id = absint( $conversation_id );
+		if ( $id <= 0 ) {
+			return new WP_Error( 'jsdw_ai_chat_invalid_conversation', __( 'Invalid conversation.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		$sk = sanitize_text_field( (string) $session_key );
+		if ( '' === $sk ) {
+			return new WP_Error( 'jsdw_ai_chat_bad_session', __( 'Invalid session.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		$name = sanitize_text_field( (string) $display_name );
+		$name = substr( trim( $name ), 0, 191 );
+		$mail = sanitize_email( (string) $email );
+		if ( '' === $name ) {
+			return new WP_Error( 'jsdw_ai_chat_name_required', __( 'Please enter your name.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		if ( '' === $mail || ! is_email( $mail ) ) {
+			return new WP_Error( 'jsdw_ai_chat_email_invalid', __( 'Please enter a valid email address.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		$table = $this->db->get_table_name( 'conversations' );
+		$row   = $wpdb->get_row( $wpdb->prepare( "SELECT id, session_key FROM {$table} WHERE id = %d LIMIT 1", $id ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared
+		if ( ! is_array( $row ) || ( isset( $row['session_key'] ) && (string) $row['session_key'] !== $sk ) ) {
+			return new WP_Error( 'jsdw_ai_chat_forbidden', __( 'Conversation not found.', 'jsdw-ai-chat' ), array( 'status' => 403 ) );
+		}
+		$ok = $wpdb->update(
+			$table,
+			array(
+				'visitor_display_name' => $name,
+				'visitor_email'        => $mail,
+				'updated_at'           => current_time( 'mysql', true ),
+			),
+			array( 'id' => $id ),
+			array( '%s', '%s', '%s' ),
+			array( '%d' )
+		);
+		if ( false === $ok ) {
+			return new WP_Error( 'jsdw_ai_chat_save_failed', __( 'Could not save visitor details.', 'jsdw-ai-chat' ), array( 'status' => 500 ) );
+		}
+		return true;
+	}
+
+	/**
 	 * @param int  $conversation_id
 	 * @param bool $on
 	 * @return bool

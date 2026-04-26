@@ -141,6 +141,7 @@ class JSDW_AI_Chat_Widget_Renderer {
 		$rest_query   = rest_url( 'ai-chat-widget/v1/chat/query' );
 		$rest_debug   = rest_url( 'ai-chat-widget/v1/chat/query-debug' );
 		$rest_session = rest_url( 'ai-chat-widget/v1/chat/session-messages' );
+		$rest_visit   = rest_url( 'ai-chat-widget/v1/chat/visitor-identity' );
 
 		$welcome = '' !== (string) ( $wui['welcome_message'] ?? '' )
 			? (string) $wui['welcome_message']
@@ -162,8 +163,10 @@ class JSDW_AI_Chat_Widget_Renderer {
 				'restUrl'             => esc_url_raw( $rest_query ),
 				'restUrlDebug'        => esc_url_raw( $rest_debug ),
 				'restSessionMessages' => esc_url_raw( $rest_session ),
+				'restVisitorIdentity' => esc_url_raw( $rest_visit ),
 				'nonce'               => wp_create_nonce( 'wp_rest' ),
 				'runtimeMode'         => $mode,
+				'requireVisitorIdentity' => ! empty( $all['chat']['require_visitor_identity_for_handoff'] ),
 				'allowPublicQuery'    => ! empty( $all['chat']['allow_public_query_endpoint'] ),
 				'isAdminCapable'      => current_user_can( 'manage_ai_chat_widget' ),
 				'adminDebugUi'        => ! empty( $wui['admin_debug_ui'] ),
@@ -188,6 +191,11 @@ class JSDW_AI_Chat_Widget_Renderer {
 					'errorNetwork'    => __( 'Could not reach the server. Please try again.', 'jsdw-ai-chat' ),
 					'errorResponse'   => __( 'Unexpected response from server.', 'jsdw-ai-chat' ),
 					'liveAgentJoined' => __( 'A team member can now reply here when they are available.', 'jsdw-ai-chat' ),
+					'visitorIdentityTitle' => __( 'Before we connect you with someone', 'jsdw-ai-chat' ),
+					'visitorNameLabel'     => __( 'Your name', 'jsdw-ai-chat' ),
+					'visitorEmailLabel'    => __( 'Email', 'jsdw-ai-chat' ),
+					'visitorSave'          => __( 'Save', 'jsdw-ai-chat' ),
+					'visitorSaving'        => __( 'Saving…', 'jsdw-ai-chat' ),
 				),
 			)
 		);

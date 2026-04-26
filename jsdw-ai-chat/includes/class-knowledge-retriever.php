@@ -145,14 +145,62 @@ class JSDW_AI_Chat_Knowledge_Retriever {
 			$max_per = max( $max_per, absint( $c ) );
 		}
 
+		$ambiguous = ( $count > JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_AMBIGUOUS_HIT_COUNT )
+			|| (
+				$distinct >= JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_AMBIGUOUS_MIN_SOURCES
+				&& $count >= JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_AMBIGUOUS_MIN_HITS
+				&& $best < JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_AMBIGUOUS_LOW_BEST
+			);
+
 		return array(
 			'hit_count'               => $count,
 			'best_score'              => $best,
 			'has_title_hit'           => $has_title,
 			'distinct_source_count'   => $distinct,
 			'max_hits_per_source'     => $max_per,
-			'ambiguous'               => $count > 8,
+			'ambiguous'               => $ambiguous,
 		);
+	}
+
+	/**
+	 * Excerpt around the first query term (or full normalized query) for local answers.
+	 *
+	 * @param string $text Normalized chunk text.
+	 * @param string $term Single search term.
+	 * @param string $full_norm Full normalized query string.
+	 * @param int    $max_len Max UTF-8 length.
+	 * @return string
+	 */
+	private function build_chunk_snippet( $text, $term, $full_norm, $max_len = 420 ) {
+		$text = (string) $text;
+		if ( '' === $text ) {
+			return '';
+		}
+		$max_len = max( 120, min( 800, absint( $max_len ) ) );
+		$lower   = function_exists( 'mb_strtolower' ) ? mb_strtolower( $text, 'UTF-8' ) : strtolower( $text );
+		$pos     = false;
+		$needle  = function_exists( 'mb_strtolower' ) ? mb_strtolower( (string) $term, 'UTF-8' ) : strtolower( (string) $term );
+		if ( '' !== $needle ) {
+			$pos = function_exists( 'mb_strpos' ) ? mb_strpos( $lower, $needle, 0, 'UTF-8' ) : strpos( $lower, $needle );
+		}
+		if ( ( false === $pos || $pos < 0 ) && '' !== (string) $full_norm ) {
+			$fn  = function_exists( 'mb_strtolower' ) ? mb_strtolower( (string) $full_norm, 'UTF-8' ) : strtolower( (string) $full_norm );
+			$pos = function_exists( 'mb_strpos' ) ? mb_strpos( $lower, $fn, 0, 'UTF-8' ) : strpos( $lower, $fn );
+		}
+		if ( false === $pos || $pos < 0 ) {
+			$pos = 0;
+		}
+		$half  = (int) floor( $max_len / 2 );
+		$start = max( 0, $pos - $half );
+		if ( $start > 0 && function_exists( 'mb_substr' ) && function_exists( 'mb_strrpos' ) ) {
+			$prefix = mb_substr( $text, 0, $start + 1, 'UTF-8' );
+			$dot    = mb_strrpos( $prefix, '. ', 0, 'UTF-8' );
+			if ( false !== $dot && $dot >= $start - 100 ) {
+				$start = min( $start, $dot + 2 );
+			}
+		}
+		$snippet = function_exists( 'mb_substr' ) ? mb_substr( $text, $start, $max_len, 'UTF-8' ) : substr( $text, $start, $max_len );
+		return trim( (string) $snippet );
 	}
 
 	/**
@@ -166,7 +214,9 @@ class JSDW_AI_Chat_Knowledge_Retriever {
 		$st   = isset( $row['source_title'] ) ? strtolower( (string) $row['source_title'] ) : '';
 		$ver  = isset( $row['source_content_version'] ) ? absint( $row['source_content_version'] ) : 1;
 
-		$score = 1.0 + min( 3.0, $ver / 100.0 );
+		$base = JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_SCORE_BASE;
+		$cap  = JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_SCORE_VERSION_CAP;
+		$score = $base + min( $cap, $ver / 100.0 );
 		$tl    = strtolower( $term );
 		$title_match = ( $st !== '' && strpos( $st, $tl ) !== false );
 		$hd_match    = ( $hd !== '' && strpos( strtolower( $hd ), $tl ) !== false );
@@ -175,19 +225,19 @@ class JSDW_AI_Chat_Knowledge_Retriever {
 		$full_norm_match = ( $full_norm !== '' && strpos( strtolower( $text ), $full_norm ) !== false );
 
 		if ( $title_match ) {
-			$score += 20.0;
+			$score += JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_SCORE_TITLE_MATCH;
 		}
 		if ( $hd_match ) {
-			$score += 12.0;
+			$score += JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_SCORE_HEADING_MATCH;
 		}
 		if ( $sec_match ) {
-			$score += 8.0;
+			$score += JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_SCORE_SECTION_MATCH;
 		}
 		if ( $body_match ) {
-			$score += 4.0;
+			$score += JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_SCORE_BODY_MATCH;
 		}
 		if ( $full_norm_match ) {
-			$score += 6.0;
+			$score += JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_SCORE_FULL_PHRASE;
 		}
 
 		$kind = JSDW_AI_Chat_Knowledge_Constants::HIT_KIND_CHUNK_BODY;
@@ -207,7 +257,7 @@ class JSDW_AI_Chat_Knowledge_Retriever {
 			'source_title'           => isset( $row['source_title'] ) ? (string) $row['source_title'] : '',
 			'source_url'             => isset( $row['source_url'] ) ? (string) $row['source_url'] : '',
 			'source_content_version' => $ver,
-			'snippet'                => mb_substr( $text, 0, 400 ),
+			'snippet'                => $this->build_chunk_snippet( $text, $term, $full_norm ),
 			'fact_id'                => 0,
 			'matched_source_title'   => $title_match,
 		);
@@ -224,16 +274,16 @@ class JSDW_AI_Chat_Knowledge_Retriever {
 		$st  = isset( $row['source_title'] ) ? strtolower( (string) $row['source_title'] ) : '';
 		$title_match = ( $st !== '' && strpos( $st, $tl ) !== false );
 
-		$score = 5.0;
+		$score = JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_FACT_BASE;
 		if ( $val === $tl || $key === $tl ) {
-			$score += 25.0;
+			$score += JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_FACT_EXACT_BOOST;
 		} elseif ( strpos( $val, $tl ) !== false || strpos( $key, $tl ) !== false ) {
-			$score += 10.0;
+			$score += JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_FACT_PARTIAL_BOOST;
 		} elseif ( $title_match ) {
-			$score += 6.0;
+			$score += JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_FACT_TITLE_ONLY_BOOST;
 		}
 		$ver = isset( $row['source_content_version'] ) ? absint( $row['source_content_version'] ) : 1;
-		$score += min( 3.0, $ver / 100.0 );
+		$score += min( JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_SCORE_VERSION_CAP, $ver / 100.0 );
 
 		return array(
 			'score'                => $score,

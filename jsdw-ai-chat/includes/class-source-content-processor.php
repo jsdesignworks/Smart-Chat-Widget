@@ -103,6 +103,7 @@ class JSDW_AI_Chat_Source_Content_Processor {
 		$settings_all = $this->settings->get_all();
 		$candidate      = $this->build_candidate_for_rules( $row );
 		$decision       = $this->rules->evaluate_candidate( $candidate, $settings_all );
+		$this->repository->apply_eligibility_decision( $source_id, $decision );
 		if ( empty( $decision['allowed'] ) ) {
 			$this->repository->update_content_state(
 				$source_id,
@@ -194,7 +195,29 @@ class JSDW_AI_Chat_Source_Content_Processor {
 		}
 
 		$this->repository->update_content_state( $source_id, $fields );
-		$this->logger->info( 'content_pipeline_completed', 'Content pipeline completed.', array( 'source_id' => $source_id, 'outcome' => $comparison['outcome'], 'reason' => $reason ) );
+		$body_html_len    = isset( $built['body_html'] ) ? strlen( (string) $built['body_html'] ) : 0;
+		$post_content_len = 0;
+		$stype            = isset( $row['source_type'] ) ? (string) $row['source_type'] : '';
+		if ( in_array( $stype, array( 'post', 'page', 'cpt' ), true ) ) {
+			$pid = isset( $row['source_object_id'] ) ? absint( $row['source_object_id'] ) : 0;
+			if ( $pid > 0 ) {
+				$p = get_post( $pid );
+				if ( $p instanceof WP_Post ) {
+					$post_content_len = strlen( (string) $p->post_content );
+				}
+			}
+		}
+		$this->logger->info(
+			'content_pipeline_completed',
+			'Content pipeline completed.',
+			array(
+				'source_id'          => $source_id,
+				'outcome'            => $comparison['outcome'],
+				'reason'             => $reason,
+				'body_html_length'   => $body_html_len,
+				'post_content_length'=> $post_content_len,
+			)
+		);
 
 		$content_version = isset( $fields['content_version'] ) ? absint( $fields['content_version'] ) : ( isset( $row['content_version'] ) ? absint( $row['content_version'] ) : 1 );
 		if ( JSDW_AI_Chat_DB::CONTENT_PROC_STATUS_OK === $fields['content_processing_status'] ) {

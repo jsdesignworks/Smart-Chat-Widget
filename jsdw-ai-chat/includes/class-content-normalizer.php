@@ -65,6 +65,30 @@ class JSDW_AI_Chat_Content_Normalizer {
 		if ( null === $html ) {
 			return '';
 		}
+		// Preserve document structure so split_paragraphs() sees real breaks (not one giant line).
+		$html = preg_replace_callback(
+			'/<h([1-6])[^>]*>(.*?)<\/h\1>/is',
+			static function ( $m ) {
+				$inner = trim( wp_strip_all_tags( (string) $m[2] ) );
+				return '' === $inner ? "\n\n" : "\n\n" . $inner . "\n\n";
+			},
+			$html
+		);
+		if ( null === $html ) {
+			return '';
+		}
+		$html = preg_replace( '@<br\s*/?>@i', "\n", $html );
+		if ( null === $html ) {
+			return '';
+		}
+		$html = preg_replace(
+			'@</(p|div|li|blockquote|section|article|header|footer|figure|tr|table|thead|tbody|tfoot|ul|ol|dl|dd|dt|h[1-6])[^>]*>@i',
+			"\n\n",
+			$html
+		);
+		if ( null === $html ) {
+			return '';
+		}
 		return wp_strip_all_tags( $html );
 	}
 

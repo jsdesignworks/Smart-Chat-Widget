@@ -89,7 +89,8 @@
 				launcher_label: String(wu.launcher_label || '').trim()
 			},
 			session: {
-				panelOpen: previewPanelOpenInitially(design)
+				panelOpen: previewPanelOpenInitially(design),
+				lockPanelOpen: false
 			}
 		};
 	}
@@ -269,6 +270,11 @@
 			launcher.addEventListener('click', function (e) {
 				e.preventDefault();
 				e.stopPropagation();
+				if (previewState.session.lockPanelOpen) {
+					previewState.session.panelOpen = true;
+					syncPreviewContent();
+					return;
+				}
 				previewState.session.panelOpen = !previewState.session.panelOpen;
 				syncPreviewContent();
 			});
@@ -278,6 +284,23 @@
 				e.preventDefault();
 				e.stopPropagation();
 				previewState.session.panelOpen = false;
+				if (previewState.session.lockPanelOpen) {
+					previewState.session.lockPanelOpen = false;
+					var lk = document.getElementById('jsdw-ds-lock-panel');
+					if (lk) {
+						lk.checked = false;
+					}
+				}
+				syncPreviewContent();
+			});
+		}
+		var lockPanelCb = document.getElementById('jsdw-ds-lock-panel');
+		if (lockPanelCb) {
+			lockPanelCb.addEventListener('change', function () {
+				previewState.session.lockPanelOpen = !!lockPanelCb.checked;
+				if (previewState.session.lockPanelOpen) {
+					previewState.session.panelOpen = true;
+				}
 				syncPreviewContent();
 			});
 		}

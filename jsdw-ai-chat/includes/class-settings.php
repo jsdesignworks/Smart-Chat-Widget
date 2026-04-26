@@ -48,11 +48,13 @@ class JSDW_AI_Chat_Settings {
 				'openai_model'   => 'gpt-4o-mini',
 			),
 			'chat'     => array(
+				'require_visitor_identity_for_handoff' => false,
 				'answer_mode'                 => 'strict_local_only',
 				'allow_public_query_endpoint' => false,
 				'allow_ai_phrase_assist'      => false,
 				'min_query_length'            => 2,
 				'max_query_length'            => 500,
+				'query_throttle_per_minute'   => 30,
 				'debug_trace_enabled'         => false,
 				'answer_style'                => 'neutral',
 				'clarification_enabled'       => true,
@@ -256,8 +258,14 @@ class JSDW_AI_Chat_Settings {
 		if ( ! in_array( $clean['chat']['answer_style'], $allowed_answer_styles, true ) ) {
 			$clean['chat']['answer_style'] = 'neutral';
 		}
+		$clean['chat']['require_visitor_identity_for_handoff'] = ! empty( $clean['chat']['require_visitor_identity_for_handoff'] );
 		$clean['chat']['allow_public_query_endpoint'] = ! empty( $clean['chat']['allow_public_query_endpoint'] );
 		$clean['chat']['allow_ai_phrase_assist']      = ! empty( $clean['chat']['allow_ai_phrase_assist'] );
+		$phrase_provider = JSDW_AI_Chat_AI_Provider_Status::sanitize_provider( (string) ( $clean['ai']['provider'] ?? '' ) );
+		$phrase_ok       = ( JSDW_AI_Chat_AI_Provider_Status::PROVIDER_OPENAI === $phrase_provider && '' !== trim( (string) ( $clean['ai']['openai_api_key'] ?? '' ) ) );
+		if ( $clean['chat']['allow_ai_phrase_assist'] && ! $phrase_ok ) {
+			$clean['chat']['allow_ai_phrase_assist'] = false;
+		}
 		$clean['chat']['debug_trace_enabled']         = ! empty( $clean['chat']['debug_trace_enabled'] );
 		$clean['chat']['clarification_enabled']       = ! empty( $clean['chat']['clarification_enabled'] );
 		$clean['chat']['store_trace_snapshots']       = ! empty( $clean['chat']['store_trace_snapshots'] );
@@ -266,6 +274,7 @@ class JSDW_AI_Chat_Settings {
 		if ( $clean['chat']['max_query_length'] < $clean['chat']['min_query_length'] ) {
 			$clean['chat']['max_query_length'] = max( $clean['chat']['min_query_length'], 10 );
 		}
+		$clean['chat']['query_throttle_per_minute'] = max( 5, min( 300, absint( $clean['chat']['query_throttle_per_minute'] ?? 30 ) ) );
 		$cr_in = isset( $clean['chat']['canned_responses'] ) && is_array( $clean['chat']['canned_responses'] ) ? $clean['chat']['canned_responses'] : array();
 		$clean['chat']['canned_responses'] = $this->sanitize_canned_responses( $cr_in );
 		$clean['sources']['enabled_source_types']       = array_values( array_unique( array_map( 'sanitize_text_field', (array) $clean['sources']['enabled_source_types'] ) ) );

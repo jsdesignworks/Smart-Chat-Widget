@@ -30,10 +30,12 @@ class JSDW_AI_Chat_Query_Guard {
 			return array( 'rejected' => true, 'reason' => 'junk_input' );
 		}
 
-		$ip         = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
-		$throttle_key = 'jsdw_ai_chat_t_' . md5( $ip . '|' . (string) $session_key );
+		$ip             = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+		$throttle_key   = 'jsdw_ai_chat_t_' . md5( $ip . '|' . (string) $session_key );
 		$throttle_count = (int) get_transient( $throttle_key );
-		if ( $throttle_count >= 30 ) {
+		$per_minute     = isset( $chat_settings['query_throttle_per_minute'] ) ? absint( $chat_settings['query_throttle_per_minute'] ) : 30;
+		$per_minute     = max( 5, min( 300, $per_minute ) );
+		if ( $throttle_count >= $per_minute ) {
 			return array( 'rejected' => true, 'reason' => 'throttled' );
 		}
 		set_transient( $throttle_key, $throttle_count + 1, MINUTE_IN_SECONDS );

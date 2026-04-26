@@ -122,18 +122,18 @@ class JSDW_AI_Chat_Health {
 				'pending_reindex'           => $this->source_repository->get_pending_reindex_count(),
 				'last_discovery_scan_time'  => get_option( JSDW_AI_CHAT_OPTION_LAST_DISCOVERY_SCAN, '' ),
 				'last_discovery_scan_result'=> get_option( JSDW_AI_CHAT_OPTION_LAST_DISCOVERY_RESULT, array() ),
-				'queue_counts'              => $this->queue->get_discovery_queue_counts(),
+				'queue_counts'              => $this->queue->normalize_queue_count_rows( $this->queue->get_discovery_queue_counts() ),
 			),
 			'content_state'   => array(
 				'status_counts'                 => $this->source_repository->get_content_processing_status_counts(),
 				'material_content_change_counts'=> $this->source_repository->get_material_content_change_counts(),
 				'last_content_verification_run' => get_option( JSDW_AI_CHAT_OPTION_LAST_CONTENT_VERIFICATION, '' ),
-				'queue_counts'                  => $this->queue->get_content_queue_counts(),
+				'queue_counts'                  => $this->queue->normalize_queue_count_rows( $this->queue->get_content_queue_counts() ),
 			),
 			'knowledge_state' => array(
 				'knowledge_status_counts'        => $this->source_repository->get_knowledge_processing_status_counts(),
 				'last_knowledge_verification_run'=> get_option( JSDW_AI_CHAT_OPTION_LAST_KNOWLEDGE_VERIFICATION, '' ),
-				'queue_counts'                   => $this->queue->get_knowledge_queue_counts(),
+				'queue_counts'                   => $this->queue->normalize_queue_count_rows( $this->queue->get_knowledge_queue_counts() ),
 				'sources_with_active_chunks'     => $this->chunk_repository->count_sources_with_active_chunks(),
 				'sources_with_active_facts'      => $this->fact_repository->count_sources_with_active_facts(),
 				'chunk_status_counts'            => $this->chunk_repository->get_chunk_status_counts(),
@@ -169,6 +169,14 @@ class JSDW_AI_Chat_Health {
 		}
 		$ai_status_summary = JSDW_AI_Chat_AI_Provider_Status::summarize( $settings );
 
+		$widget_public_note = '';
+		$feat               = isset( $settings['features'] ) && is_array( $settings['features'] ) ? $settings['features'] : array();
+		$wu                 = isset( $settings['widget_ui'] ) && is_array( $settings['widget_ui'] ) ? $settings['widget_ui'] : array();
+		$chat               = isset( $settings['chat'] ) && is_array( $settings['chat'] ) ? $settings['chat'] : array();
+		if ( ! empty( $feat['enable_widget'] ) && ! empty( $wu['widget_enabled'] ) && empty( $chat['allow_public_query_endpoint'] ) ) {
+			$widget_public_note = __( 'The widget is enabled, but unauthenticated visitors cannot query the chat endpoint until you enable “Allow unauthenticated visitors to call the chat query endpoint” in Settings → Chat.', 'jsdw-ai-chat' );
+		}
+
 		return array(
 			'conversations'              => $conversations_count,
 			'messages'                   => $messages_count,
@@ -179,6 +187,7 @@ class JSDW_AI_Chat_Health {
 			'ai_provider'                => $ai_provider,
 			'ai_status_summary'          => $ai_status_summary,
 			'last_answer_request'        => get_option( JSDW_AI_CHAT_OPTION_LAST_ANSWER_REQUEST, '' ),
+			'widget_public_note'         => $widget_public_note,
 		);
 	}
 }

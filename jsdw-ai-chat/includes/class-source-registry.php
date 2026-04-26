@@ -249,4 +249,37 @@ class JSDW_AI_Chat_Source_Registry {
 
 		return isset( $map[ $type ] ) ? absint( $map[ $type ] ) : 50;
 	}
+
+	/**
+	 * Queue background re-evaluation of persisted eligibility columns (e.g. after settings save).
+	 */
+	public function queue_eligibility_revalidation() {
+		$this->queue->add_job(
+			JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_ELIGIBILITY_REVALIDATE,
+			array( 'offset' => 0 ),
+			12
+		);
+	}
+
+	/**
+	 * @param array<string,mixed> $payload
+	 * @return array<string,mixed>
+	 */
+	public function run_eligibility_revalidation_job( array $payload ) {
+		$settings = $this->settings->get_all();
+		$offset   = isset( $payload['offset'] ) ? absint( $payload['offset'] ) : 0;
+		$updated  = $this->repository->recompute_eligibility_batch( $this->rules, $settings, $offset, 100 );
+		if ( $updated >= 100 ) {
+			$this->queue->add_job(
+				JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_ELIGIBILITY_REVALIDATE,
+				array( 'offset' => $offset + 100 ),
+				12
+			);
+		}
+		return array(
+			'updated'     => $updated,
+			'next_offset' => $offset + $updated,
+			'chained'     => $updated >= 100,
+		);
+	}
 }

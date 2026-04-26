@@ -44,38 +44,45 @@ class JSDW_AI_Chat_Confidence_Policy {
 		}
 
 		// Many weak matches across sources without a title anchor.
-		if ( $one_per_source && $hits >= 5 && ! $has_title && $best < 18.0 ) {
+		$t_one_per = JSDW_AI_Chat_Knowledge_Constants::CONF_THRESHOLD_ONE_PER_TITLE;
+		$t_scatter_lo = JSDW_AI_Chat_Knowledge_Constants::CONF_THRESHOLD_SCATTER_LOW;
+		$t_scatter_med = JSDW_AI_Chat_Knowledge_Constants::CONF_THRESHOLD_SCATTER_MED;
+		$t_title = JSDW_AI_Chat_Knowledge_Constants::CONF_THRESHOLD_TITLE_ANCHOR;
+		$t_strong = JSDW_AI_Chat_Knowledge_Constants::CONF_THRESHOLD_STRONG;
+		$t_weak = JSDW_AI_Chat_Knowledge_Constants::CONF_THRESHOLD_WEAK_BODY;
+
+		if ( $one_per_source && $hits >= 5 && ! $has_title && $best < $t_one_per ) {
 			return JSDW_AI_Chat_Knowledge_Constants::CONF_REQUIRES_CLARIFICATION;
 		}
 
-		if ( $scattered && ! $has_title && $best < 15.0 ) {
+		if ( $scattered && ! $has_title && $best < $t_scatter_lo ) {
 			return JSDW_AI_Chat_Knowledge_Constants::CONF_REQUIRES_CLARIFICATION;
 		}
 
-		if ( $scattered && ! $has_title && $best < 20.0 ) {
+		if ( $scattered && ! $has_title && $best < $t_scatter_med ) {
 			return JSDW_AI_Chat_Knowledge_Constants::CONF_LOW_CONFIDENCE;
 		}
 
 		// Title match is a strong local signal when score is sufficient.
-		if ( $has_title && $best >= 10.0 ) {
+		if ( $has_title && $best >= $t_title ) {
 			if ( $one_per_source && $hits >= 8 ) {
 				return JSDW_AI_Chat_Knowledge_Constants::CONF_LOW_CONFIDENCE;
 			}
 			return JSDW_AI_Chat_Knowledge_Constants::CONF_ANSWERABLE_LOCALLY;
 		}
 
-		if ( $dominant && $best >= 12.0 && $hits >= 1 ) {
+		if ( $dominant && $best >= $t_strong && $hits >= 1 ) {
 			return JSDW_AI_Chat_Knowledge_Constants::CONF_ANSWERABLE_LOCALLY;
 		}
 
-		if ( $best >= 12.0 && $hits >= 1 ) {
+		if ( $best >= $t_strong && $hits >= 1 ) {
 			if ( $scattered && ! $has_title ) {
 				return JSDW_AI_Chat_Knowledge_Constants::CONF_LOW_CONFIDENCE;
 			}
 			return JSDW_AI_Chat_Knowledge_Constants::CONF_ANSWERABLE_LOCALLY;
 		}
 
-		if ( $best >= 4.0 ) {
+		if ( $best >= $t_weak ) {
 			return JSDW_AI_Chat_Knowledge_Constants::CONF_LOW_CONFIDENCE;
 		}
 

@@ -282,6 +282,16 @@ class JSDW_AI_Chat_REST {
 
 		register_rest_route(
 			'ai-chat-widget/v1',
+			'/chat/visitor-identity',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'chat_visitor_identity' ),
+				'permission_callback' => array( $this, 'chat_query_permission' ),
+			)
+		);
+
+		register_rest_route(
+			'ai-chat-widget/v1',
 			'/chat/query-debug',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -873,6 +883,33 @@ class JSDW_AI_Chat_REST {
 	}
 
 	/**
+	 * Public widget: save visitor name/email on a conversation (session_key required).
+	 */
+	public function chat_visitor_identity( WP_REST_Request $request ) {
+		if ( ! $this->chat_service->chat_storage_enabled() ) {
+			return new WP_Error(
+				'jsdw_ai_chat_storage_off',
+				__( 'Conversation storage is disabled.', 'jsdw-ai-chat' ),
+				array( 'status' => 400 )
+			);
+		}
+		$params = $request->get_json_params();
+		if ( ! is_array( $params ) ) {
+			$params = array();
+		}
+		$id   = isset( $params['conversation_id'] ) ? absint( $params['conversation_id'] ) : 0;
+		$sk   = isset( $params['session_key'] ) ? sanitize_text_field( (string) $params['session_key'] ) : '';
+		$name = isset( $params['visitor_name'] ) ? (string) $params['visitor_name'] : '';
+		$mail = isset( $params['visitor_email'] ) ? (string) $params['visitor_email'] : '';
+		$ok   = $this->conversation_service->update_visitor_identity( $id, $sk, $name, $mail );
+		if ( is_wp_error( $ok ) ) {
+			return $ok;
+		}
+		$conv = $this->conversation_service->get_conversation( $id );
+		return rest_ensure_response( array( 'ok' => true, 'data' => array( 'conversation' => $conv ) ) );
+	}
+
+	/**
 	 * Admin joins as live agent (sets agent_connected; does not post a message).
 	 */
 	public function chat_agent_join( WP_REST_Request $request ) {
@@ -894,6 +931,18 @@ class JSDW_AI_Chat_REST {
 		$conv = $this->conversation_service->get_conversation( $id );
 		if ( ! is_array( $conv ) ) {
 			return new WP_Error( 'jsdw_ai_chat_not_found', __( 'Conversation not found.', 'jsdw-ai-chat' ), array( 'status' => 404 ) );
+		}
+		$settings = $this->settings->get_all();
+		if ( ! empty( $settings['chat']['require_visitor_identity_for_handoff'] ) ) {
+			$vn = isset( $conv['visitor_display_name'] ) ? trim( (string) $conv['visitor_display_name'] ) : '';
+			$ve = isset( $conv['visitor_email'] ) ? trim( (string) $conv['visitor_email'] ) : '';
+			if ( '' === $vn || '' === $ve || ! is_email( $ve ) ) {
+				return new WP_Error(
+					'jsdw_visitor_identity_required',
+					__( 'The visitor must share their name and email before you can join as a live agent. Ask them to complete the form in the chat widget.', 'jsdw-ai-chat' ),
+					array( 'status' => 400, 'code' => 'visitor_identity_required' )
+				);
+			}
 		}
 		$this->conversation_service->set_agent_connected( $id, true );
 		$conv = $this->conversation_service->get_conversation( $id );

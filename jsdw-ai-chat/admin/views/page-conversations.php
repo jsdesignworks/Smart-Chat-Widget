@@ -54,6 +54,13 @@ if ( '' === $last_msg_role ) {
 		<span class="jsdw-conv-page-unread" id="jsdw-conv-page-unread" <?php echo $inbox_unread_total <= 0 ? 'hidden' : ''; ?>>(<?php echo $inbox_unread_total > 0 ? esc_html( (string) min( 99, $inbox_unread_total ) ) : '0'; ?>)</span>
 	</h1>
 	<p class="description"><?php echo esc_html__( 'Open a thread to read messages in view-only mode. Use “Join conversation” when you intend to reply as a live agent — then automated answers pause for that thread until you end the session.', 'jsdw-ai-chat' ); ?></p>
+	<?php
+	jsdw_ai_chat_help_tip(
+		'jsdw-conv-help',
+		__( 'About live agent mode', 'jsdw-ai-chat' ),
+		'<p>' . esc_html__( 'Joining switches that conversation to human-handling: the widget shows a live banner and your replies appear as the agent. If settings require visitor name and email, the visitor must submit the in-widget form before you can join.', 'jsdw-ai-chat' ) . '</p>'
+	);
+	?>
 
 	<?php if ( ! $storage_on ) : ?>
 		<div class="notice notice-warning"><p><?php echo esc_html__( 'Conversation storage is disabled in settings. Enable storage to send agent messages and use live-agent mode.', 'jsdw-ai-chat' ); ?></p></div>
@@ -95,9 +102,12 @@ if ( '' === $last_msg_role ) {
 						}
 						$uid = isset( $row['user_id'] ) && $row['user_id'] ? (string) $row['user_id'] : '';
 						$sk  = isset( $row['session_key'] ) ? (string) $row['session_key'] : '';
-						$title = '' !== $uid
-							? sprintf( /* translators: %s: user id */ __( 'User %s', 'jsdw-ai-chat' ), $uid )
-							: ( '' !== $sk ? wp_trim_words( $sk, 4, '…' ) : '#' . (string) $cid );
+						$vname = isset( $row['visitor_display_name'] ) ? trim( (string) $row['visitor_display_name'] ) : '';
+						$title = '' !== $vname
+							? $vname
+							: ( '' !== $uid
+								? sprintf( /* translators: %s: user id */ __( 'User %s', 'jsdw-ai-chat' ), $uid )
+								: ( '' !== $sk ? wp_trim_words( $sk, 4, '…' ) : '#' . (string) $cid ) );
 						$last_at = isset( $row['last_message_at'] ) ? $row['last_message_at'] : ( $row['last_active_at'] ?? '' );
 						?>
 						<li class="jsdw-conv-list__item">

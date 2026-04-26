@@ -426,6 +426,36 @@
 			}
 		}
 
+		var visitorBar = null;
+		var vNameInp = null;
+		var vEmailInp = null;
+		var vSaveBtn = null;
+		if (mode === 'live' && cfg.requireVisitorIdentity) {
+			visitorBar = document.createElement('div');
+			visitorBar.className = 'jsdw-w-visitor-id';
+			visitorBar.setAttribute('hidden', 'hidden');
+			var vt = (cfg.strings && cfg.strings.visitorIdentityTitle) || '';
+			var vnl = (cfg.strings && cfg.strings.visitorNameLabel) || '';
+			var vel = (cfg.strings && cfg.strings.visitorEmailLabel) || '';
+			var vs = (cfg.strings && cfg.strings.visitorSave) || 'Save';
+			visitorBar.innerHTML =
+				'<div class="jsdw-w-visitor-id__title">' +
+				esc(vt) +
+				'</div>' +
+				'<label class="jsdw-w-visitor-id__field"><span>' +
+				esc(vnl) +
+				'</span><input type="text" class="jsdw-w-visitor-id__input" autocomplete="name" /></label>' +
+				'<label class="jsdw-w-visitor-id__field"><span>' +
+				esc(vel) +
+				'</span><input type="email" class="jsdw-w-visitor-id__input" autocomplete="email" /></label>' +
+				'<button type="button" class="jsdw-w-visitor-id__save">' +
+				esc(vs) +
+				'</button>';
+			vNameInp = visitorBar.querySelector('input[type="text"]');
+			vEmailInp = visitorBar.querySelector('input[type="email"]');
+			vSaveBtn = visitorBar.querySelector('.jsdw-w-visitor-id__save');
+		}
+
 		var inputRow = document.createElement('div');
 		inputRow.className = 'jsdw-w-input-row';
 		var inp = document.createElement('input');
@@ -443,6 +473,9 @@
 		send.disabled = mode !== 'live';
 		inputRow.appendChild(inp);
 		inputRow.appendChild(send);
+		if (visitorBar) {
+			panel.appendChild(visitorBar);
+		}
 		panel.appendChild(inputRow);
 
 		if (d.showBranding) {
@@ -472,6 +505,26 @@
 		var renderedAgentIds = {};
 		var POLL_LS = 'jsdw_ai_chat_w_poll';
 		var LIVE_HANDOFF = 'live_agent_handoff';
+
+		function syncVisitorIdentityBar(conv) {
+			if (!visitorBar || !cfg.requireVisitorIdentity) {
+				return;
+			}
+			if (!conv || typeof conv !== 'object') {
+				visitorBar.setAttribute('hidden', 'hidden');
+				return;
+			}
+			var need =
+				!conv.visitor_display_name ||
+				!String(conv.visitor_display_name).trim() ||
+				!conv.visitor_email ||
+				!String(conv.visitor_email).trim();
+			if (need) {
+				visitorBar.removeAttribute('hidden');
+			} else {
+				visitorBar.setAttribute('hidden', 'hidden');
+			}
+		}
 
 		function loadPollState(cid) {
 			try {
@@ -813,6 +866,7 @@
 					if (id > 0) {
 						savePollState(id, agentPollSince);
 					}
+					syncVisitorIdentityBar(conv);
 					stopAgentPoll();
 					if (isAgentConnected(conv) && id > 0 && sk) {
 						showLiveAgentBanner();
@@ -848,6 +902,58 @@
 				});
 		}
 
+		if (vSaveBtn && cfg.restVisitorIdentity) {
+			vSaveBtn.addEventListener('click', function () {
+				var sess = loadSession();
+				var cid = sess.conversationId;
+				var sk = sess.sessionKey;
+				if (!cid || !sk) {
+					return;
+				}
+				var nm = vNameInp ? String(vNameInp.value || '').trim() : '';
+				var em = vEmailInp ? String(vEmailInp.value || '').trim() : '';
+				var saving = (cfg.strings && cfg.strings.visitorSaving) || '…';
+				vSaveBtn.disabled = true;
+				var prev = vSaveBtn.textContent;
+				vSaveBtn.textContent = saving;
+				fetch(cfg.restVisitorIdentity, {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-WP-Nonce': cfg.nonce || ''
+					},
+					body: JSON.stringify({
+						conversation_id: cid,
+						session_key: sk,
+						visitor_name: nm,
+						visitor_email: em
+					})
+				})
+					.then(function (res) {
+						return res
+							.json()
+							.catch(function () {
+								return {};
+							})
+							.then(function (json) {
+								return { ok: res.ok, json: json };
+							});
+					})
+					.then(function (pack) {
+						if (!pack.ok || !pack.json || pack.json.ok !== true || !pack.json.data || !pack.json.data.conversation) {
+							return;
+						}
+						syncVisitorIdentityBar(pack.json.data.conversation);
+					})
+					.catch(function () {})
+					.finally(function () {
+						vSaveBtn.disabled = false;
+						vSaveBtn.textContent = prev;
+					});
+			});
+		}
+
 		send.addEventListener('click', handleSend);
 		inp.addEventListener('keydown', function (e) {
 			if (e.key === 'Enter' && !e.shiftKey) {
@@ -874,6 +980,7 @@
 				clearPollState();
 				hideLiveAgentBanner();
 				clearSession();
+				syncVisitorIdentityBar(null);
 				var nodes = messages.querySelectorAll(
 					'.jsdw-w-msg-user, .jsdw-w-msg-bot:not(.jsdw-w-msg-welcome), .jsdw-w-msg-agent'
 				);

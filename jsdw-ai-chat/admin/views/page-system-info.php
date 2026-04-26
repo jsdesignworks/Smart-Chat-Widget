@@ -159,7 +159,7 @@ $last_err = isset( $r['last_error'] ) && is_array( $r['last_error'] ) ? $r['last
 				<p><strong><?php echo esc_html__( 'Source counts by type', 'jsdw-ai-chat' ); ?></strong></p>
 				<?php $jsdw_count_table( isset( $disc['source_counts'] ) && is_array( $disc['source_counts'] ) ? $disc['source_counts'] : array() ); ?>
 				<p><strong><?php echo esc_html__( 'Discovery queue counts', 'jsdw-ai-chat' ); ?></strong></p>
-				<?php $jsdw_count_table( isset( $disc['queue_counts'] ) && is_array( $disc['queue_counts'] ) ? $disc['queue_counts'] : array() ); ?>
+				<?php jsdw_ai_chat_render_job_queue_table( isset( $disc['queue_counts'] ) && is_array( $disc['queue_counts'] ) ? $disc['queue_counts'] : array() ); ?>
 				<?php
 				$scan_res = isset( $disc['last_discovery_scan_result'] ) && is_array( $disc['last_discovery_scan_result'] ) ? $disc['last_discovery_scan_result'] : array();
 				if ( ! empty( $scan_res ) ) :
@@ -185,7 +185,7 @@ $last_err = isset( $r['last_error'] ) && is_array( $r['last_error'] ) ? $r['last
 				<p><strong><?php echo esc_html__( 'Material content change counts', 'jsdw-ai-chat' ); ?></strong></p>
 				<?php $jsdw_count_table( isset( $content['material_content_change_counts'] ) && is_array( $content['material_content_change_counts'] ) ? $content['material_content_change_counts'] : array() ); ?>
 				<p><strong><?php echo esc_html__( 'Content queue counts', 'jsdw-ai-chat' ); ?></strong></p>
-				<?php $jsdw_count_table( isset( $content['queue_counts'] ) && is_array( $content['queue_counts'] ) ? $content['queue_counts'] : array() ); ?>
+				<?php jsdw_ai_chat_render_job_queue_table( isset( $content['queue_counts'] ) && is_array( $content['queue_counts'] ) ? $content['queue_counts'] : array() ); ?>
 			</div>
 		</div>
 
@@ -206,7 +206,7 @@ $last_err = isset( $r['last_error'] ) && is_array( $r['last_error'] ) ? $r['last
 				<p><strong><?php echo esc_html__( 'Chunk status counts', 'jsdw-ai-chat' ); ?></strong></p>
 				<?php $jsdw_count_table( isset( $know['chunk_status_counts'] ) && is_array( $know['chunk_status_counts'] ) ? $know['chunk_status_counts'] : array() ); ?>
 				<p><strong><?php echo esc_html__( 'Knowledge queue counts', 'jsdw-ai-chat' ); ?></strong></p>
-				<?php $jsdw_count_table( isset( $know['queue_counts'] ) && is_array( $know['queue_counts'] ) ? $know['queue_counts'] : array() ); ?>
+				<?php jsdw_ai_chat_render_job_queue_table( isset( $know['queue_counts'] ) && is_array( $know['queue_counts'] ) ? $know['queue_counts'] : array() ); ?>
 			</div>
 		</div>
 
@@ -214,6 +214,9 @@ $last_err = isset( $r['last_error'] ) && is_array( $r['last_error'] ) ? $r['last
 			<h2 class="hndle"><?php echo esc_html__( 'Answer / chat', 'jsdw-ai-chat' ); ?></h2>
 			<div class="inside">
 				<?php
+				if ( ! empty( $answer['widget_public_note'] ) ) {
+					echo '<div class="notice notice-warning inline"><p>' . esc_html( (string) $answer['widget_public_note'] ) . '</p></div>';
+				}
 				$jsdw_kv_rows(
 					array(
 						__( 'Conversations (rows)', 'jsdw-ai-chat' ) => isset( $answer['conversations'] ) ? (string) (int) $answer['conversations'] : '0',

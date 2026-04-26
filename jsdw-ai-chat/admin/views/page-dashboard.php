@@ -60,14 +60,14 @@ $jsdw_sum_counts = static function ( array $arr ) {
 
 $disc_enabled = ! empty( $disc['enabled'] );
 $disc_q = isset( $disc['queue_counts'] ) && is_array( $disc['queue_counts'] ) ? $disc['queue_counts'] : array();
-$disc_q_sum = $jsdw_sum_counts( $disc_q );
+$disc_q_sum = isset( $disc_q['total_jobs'] ) ? absint( $disc_q['total_jobs'] ) : $jsdw_sum_counts( $disc_q );
 
 $C = isset( $content_state['status_counts'] ) && is_array( $content_state['status_counts'] ) ? $content_state['status_counts'] : array();
 $content_q = isset( $content_state['queue_counts'] ) && is_array( $content_state['queue_counts'] ) ? $content_state['queue_counts'] : array();
-$content_q_sum = $jsdw_sum_counts( $content_q );
+$content_q_sum = isset( $content_q['total_jobs'] ) ? absint( $content_q['total_jobs'] ) : $jsdw_sum_counts( $content_q );
 
 $know_q = isset( $knowledge_state['queue_counts'] ) && is_array( $knowledge_state['queue_counts'] ) ? $knowledge_state['queue_counts'] : array();
-$know_q_sum = $jsdw_sum_counts( $know_q );
+$know_q_sum = isset( $know_q['total_jobs'] ) ? absint( $know_q['total_jobs'] ) : $jsdw_sum_counts( $know_q );
 
 $last_error = isset( $r['last_error'] ) ? $r['last_error'] : array();
 
@@ -107,6 +107,25 @@ if ( ! empty( $last_error ) ) {
 }
 
 $schema_version = isset( $r['schema_version'] ) ? (string) $r['schema_version'] : '';
+
+$attention_ok   = array();
+$attention_warn = array();
+if ( $pipe_discovery === 'ok' && $pipe_content === 'ok' && $pipe_knowledge === 'ok' && $pipe_answering === 'ok' && empty( $last_error ) ) {
+	$attention_ok[] = __( 'Discovery, content, knowledge, and answering signals look normal for this snapshot.', 'jsdw-ai-chat' );
+} else {
+	if ( 'inactive' === $pipe_discovery || 'warn' === $pipe_discovery ) {
+		$attention_warn[] = __( 'Discovery: check indexing is enabled, cron is running, and review the Sources page if reindex or queue work is backing up.', 'jsdw-ai-chat' );
+	}
+	if ( 'warn' === $pipe_content ) {
+		$attention_warn[] = __( 'Content: some sources may be waiting on extraction or had failures — open Sources and Jobs for details.', 'jsdw-ai-chat' );
+	}
+	if ( 'warn' === $pipe_knowledge ) {
+		$attention_warn[] = __( 'Knowledge: chunks or facts may still be pending or failed for some sources.', 'jsdw-ai-chat' );
+	}
+	if ( 'warn' === $pipe_answering || ! empty( $last_error ) ) {
+		$attention_warn[] = __( 'Answering: a recent error payload is present or the answering stage needs attention — check logs and AI settings.', 'jsdw-ai-chat' );
+	}
+}
 
 $url_sources = admin_url( 'admin.php?page=jsdw-ai-chat-sources' );
 $url_jobs    = admin_url( 'admin.php?page=jsdw-ai-chat-jobs' );
@@ -158,6 +177,20 @@ if ( ! empty( $last_error ) ) {
 <div class="jsdw-page jsdw-dashboard">
 	<h1><?php echo esc_html__( 'JSDW AI Chat Dashboard', 'jsdw-ai-chat' ); ?></h1>
 
+	<div class="jsdw-dashboard-attention jsdw-card">
+		<div class="jsdw-card__title"><?php echo esc_html__( 'At a glance', 'jsdw-ai-chat' ); ?></div>
+		<?php if ( ! empty( $attention_ok ) ) : ?>
+			<p class="jsdw-dashboard-attention__ok"><?php echo esc_html( $attention_ok[0] ); ?></p>
+		<?php endif; ?>
+		<?php if ( ! empty( $attention_warn ) ) : ?>
+			<ul class="jsdw-dashboard-attention__list">
+				<?php foreach ( $attention_warn as $line ) : ?>
+					<li><?php echo esc_html( $line ); ?></li>
+				<?php endforeach; ?>
+			</ul>
+		<?php endif; ?>
+	</div>
+
 	<div class="jsdw-dashboard-grid">
 		<a class="jsdw-stat-card" href="<?php echo esc_url( $url_sources ); ?>">
 			<div class="jsdw-stat-label"><?php echo esc_html__( 'Total Sources', 'jsdw-ai-chat' ); ?></div>
@@ -182,33 +215,78 @@ if ( ! empty( $last_error ) ) {
 	</div>
 
 	<div class="jsdw-card jsdw-dashboard-pipeline">
-		<div class="jsdw-card__title"><?php echo esc_html__( 'Pipeline status', 'jsdw-ai-chat' ); ?></div>
+		<div class="jsdw-dashboard-pipeline__head">
+			<div class="jsdw-card__title"><?php echo esc_html__( 'Pipeline status', 'jsdw-ai-chat' ); ?></div>
+			<?php
+			jsdw_ai_chat_help_tip(
+				'jsdw-dash-pipeline-help',
+				__( 'How to read this', 'jsdw-ai-chat' ),
+				'<p>' . esc_html__( 'Discovery finds candidates, content extracts text, knowledge builds chunks and facts, answering serves visitors. Yellow states usually mean pending work or something to verify — not necessarily an emergency.', 'jsdw-ai-chat' ) . '</p>'
+			);
+			?>
+		</div>
 		<ul class="jsdw-pipeline-list">
 			<li class="jsdw-pipeline-row">
 				<span class="jsdw-pipeline-dot jsdw-pipeline-dot--<?php echo esc_attr( $pipe_discovery ); ?>" aria-hidden="true"></span>
 				<div class="jsdw-pipeline-body">
-					<div class="jsdw-pipeline-label"><?php echo esc_html__( 'Discovery', 'jsdw-ai-chat' ); ?></div>
+					<div class="jsdw-pipeline-label">
+						<?php echo esc_html__( 'Discovery', 'jsdw-ai-chat' ); ?>
+						<?php
+						jsdw_ai_chat_help_tip(
+							'jsdw-dash-disc-help',
+							__( 'Help', 'jsdw-ai-chat' ),
+							'<p>' . esc_html__( 'Discovery schedules and scans for sources. Queue jobs here are normal while cron is catching up.', 'jsdw-ai-chat' ) . '</p>'
+						);
+						?>
+					</div>
 					<div class="jsdw-pipeline-summary"><?php echo esc_html( $disc_line ); ?></div>
 				</div>
 			</li>
 			<li class="jsdw-pipeline-row">
 				<span class="jsdw-pipeline-dot jsdw-pipeline-dot--<?php echo esc_attr( $pipe_content ); ?>" aria-hidden="true"></span>
 				<div class="jsdw-pipeline-body">
-					<div class="jsdw-pipeline-label"><?php echo esc_html__( 'Content', 'jsdw-ai-chat' ); ?></div>
+					<div class="jsdw-pipeline-label">
+						<?php echo esc_html__( 'Content', 'jsdw-ai-chat' ); ?>
+						<?php
+						jsdw_ai_chat_help_tip(
+							'jsdw-dash-content-help',
+							__( 'Help', 'jsdw-ai-chat' ),
+							'<p>' . esc_html__( 'Content extraction turns pages into normalized text. Pending rows usually need time for the queue or a retry from Sources.', 'jsdw-ai-chat' ) . '</p>'
+						);
+						?>
+					</div>
 					<div class="jsdw-pipeline-summary"><?php echo esc_html( $content_line ); ?></div>
 				</div>
 			</li>
 			<li class="jsdw-pipeline-row">
 				<span class="jsdw-pipeline-dot jsdw-pipeline-dot--<?php echo esc_attr( $pipe_knowledge ); ?>" aria-hidden="true"></span>
 				<div class="jsdw-pipeline-body">
-					<div class="jsdw-pipeline-label"><?php echo esc_html__( 'Knowledge', 'jsdw-ai-chat' ); ?></div>
+					<div class="jsdw-pipeline-label">
+						<?php echo esc_html__( 'Knowledge', 'jsdw-ai-chat' ); ?>
+						<?php
+						jsdw_ai_chat_help_tip(
+							'jsdw-dash-know-help',
+							__( 'Help', 'jsdw-ai-chat' ),
+							'<p>' . esc_html__( 'Knowledge builds searchable chunks and facts from OK content. It stays pending until content succeeds.', 'jsdw-ai-chat' ) . '</p>'
+						);
+						?>
+					</div>
 					<div class="jsdw-pipeline-summary"><?php echo esc_html( $knowledge_line ); ?></div>
 				</div>
 			</li>
 			<li class="jsdw-pipeline-row">
 				<span class="jsdw-pipeline-dot jsdw-pipeline-dot--<?php echo esc_attr( $pipe_answering ); ?>" aria-hidden="true"></span>
 				<div class="jsdw-pipeline-body">
-					<div class="jsdw-pipeline-label"><?php echo esc_html__( 'Answering', 'jsdw-ai-chat' ); ?></div>
+					<div class="jsdw-pipeline-label">
+						<?php echo esc_html__( 'Answering', 'jsdw-ai-chat' ); ?>
+						<?php
+						jsdw_ai_chat_help_tip(
+							'jsdw-dash-answer-help',
+							__( 'Help', 'jsdw-ai-chat' ),
+							'<p>' . esc_html__( 'This reflects chat storage, recent activity, and whether an error was recorded — not every visitor-facing failure.', 'jsdw-ai-chat' ) . '</p>'
+						);
+						?>
+					</div>
 					<div class="jsdw-pipeline-summary"><?php echo esc_html( $answering_line ); ?></div>
 				</div>
 			</li>

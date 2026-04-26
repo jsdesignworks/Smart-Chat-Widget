@@ -20,8 +20,14 @@ class JSDW_AI_Chat_Local_Answer_Builder {
 		$best_sid   = isset( $best_hit['source_id'] ) ? absint( $best_hit['source_id'] ) : 0;
 		$next_sid   = isset( $next_hit['source_id'] ) ? absint( $next_hit['source_id'] ) : 0;
 
-		// Keep the builder conservative: if top matches are too close but from different sources, clarify instead.
-		if ( $best_sid > 0 && $next_sid > 0 && $best_sid !== $next_sid && abs( $best_score - $next_score ) < 2.0 ) {
+		// If two sources score within a narrow band and neither hit is anchored, ask for clarification.
+		$gap = JSDW_AI_Chat_Knowledge_Constants::LOCAL_ANSWER_CROSS_SOURCE_SCORE_GAP;
+		if (
+			$best_sid > 0 && $next_sid > 0 && $best_sid !== $next_sid
+			&& abs( $best_score - $next_score ) < $gap
+			&& ! $this->hit_has_retrieval_anchor( $best_hit )
+			&& ! $this->hit_has_retrieval_anchor( $next_hit )
+		) {
 			return array(
 				'answer_text' => __( 'I found similarly strong matches from different sources. Please clarify what you want to know.', 'jsdw-ai-chat' ),
 				'answer_type' => JSDW_AI_Chat_Answer_Constants::ANSWER_TYPE_AMBIGUOUS_CLARIFY,
@@ -51,6 +57,25 @@ class JSDW_AI_Chat_Local_Answer_Builder {
 		return array(
 			'answer_text' => $fallback_snippet,
 			'answer_type' => JSDW_AI_Chat_Answer_Constants::ANSWER_TYPE_FAQ_STYLE,
+		);
+	}
+
+	/**
+	 * @param array<string,mixed> $hit
+	 */
+	private function hit_has_retrieval_anchor( array $hit ) {
+		if ( ! empty( $hit['matched_source_title'] ) ) {
+			return true;
+		}
+		$kind = isset( $hit['hit_kind'] ) ? (string) $hit['hit_kind'] : '';
+		return in_array(
+			$kind,
+			array(
+				JSDW_AI_Chat_Knowledge_Constants::HIT_KIND_CHUNK_HEADING,
+				JSDW_AI_Chat_Knowledge_Constants::HIT_KIND_CHUNK_SECTION,
+				JSDW_AI_Chat_Knowledge_Constants::HIT_KIND_SOURCE_TITLE,
+			),
+			true
 		);
 	}
 }

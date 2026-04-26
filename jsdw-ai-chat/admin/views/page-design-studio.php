@@ -229,6 +229,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div class="jsdw-ds-preview-col">
 			<div class="jsdw-ds-preview-inner">
 				<p class="jsdw-ds-preview-kicker" aria-hidden="true"><?php echo esc_html__( 'Configurator preview', 'jsdw-ai-chat' ); ?></p>
+				<label class="jsdw-ds-preview-lock">
+					<input type="checkbox" id="jsdw-ds-lock-panel" />
+					<?php echo esc_html__( 'Keep preview panel open while editing', 'jsdw-ai-chat' ); ?>
+				</label>
+				<?php
+				jsdw_ai_chat_help_tip(
+					'jsdw-ds-help',
+					__( 'Preview tips', 'jsdw-ai-chat' ),
+					'<p>' . esc_html__( 'The launcher toggles the simulated chat panel. Lock it open while adjusting colors so the launcher does not collapse the preview. This does not affect the live site.', 'jsdw-ai-chat' ) . '</p>'
+				);
+				?>
 				<div class="jsdw-ds-browser" id="jsdw-ds-browser">
 					<div class="jsdw-ds-browser-chrome">
 						<span class="jsdw-ds-dots"><span></span><span></span><span></span></span>

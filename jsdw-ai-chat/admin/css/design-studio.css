@@ -467,6 +467,21 @@
 	color: var(--ds-label-soft, rgba(45, 38, 64, 0.55));
 }
 
+#jsdw-ai-chat-design-studio .jsdw-ds-preview-lock {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 10px;
+	font-size: 12px;
+	color: var(--ds-muted);
+	cursor: pointer;
+	user-select: none;
+}
+
+#jsdw-ai-chat-design-studio .jsdw-ds-preview-inner > .jsdw-help-tip {
+	margin-bottom: 10px;
+}
+
 #jsdw-ai-chat-design-studio .jsdw-ds-browser {
 	background: var(--jsdw-color-preview-window-bg);
 	border-radius: 12px;
@@ -763,9 +778,6 @@
 }
 
 #jsdw-ai-chat-design-studio .jsdw-pr-widget {
-	--chat-primary: var(--jsdw-color-action-primary);
-	--chat-bg: var(--jsdw-color-preview-window-bg);
-	--chat-bot-bubble: var(--jsdw-color-chat-bot-bubble);
 	--chat-font-family: system-ui, sans-serif;
 	--chat-font-size: 13px;
 	--chat-font-size-lg: 15px;

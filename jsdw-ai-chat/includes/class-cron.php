@@ -152,6 +152,7 @@ class JSDW_AI_Chat_Cron {
 				JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_DISCOVERY_SINGLE,
 				JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_SYNC,
 				JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_VERIFY_MISSING,
+				JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_ELIGIBILITY_REVALIDATE,
 				JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_CONTENT_PROCESS,
 				JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_CONTENT_PROCESS_BATCH,
 				JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_CONTENT_VERIFY,
@@ -186,6 +187,8 @@ class JSDW_AI_Chat_Cron {
 					$result = $this->source_registry->run_single_post_scan( isset( $payload['post_id'] ) ? absint( $payload['post_id'] ) : 0 );
 				} elseif ( JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_VERIFY_MISSING === $job_type ) {
 					$result = $this->source_registry->run_full_scan();
+				} elseif ( JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_ELIGIBILITY_REVALIDATE === $job_type ) {
+					$result = $this->source_registry->run_eligibility_revalidation_job( $payload );
 				} elseif ( $this->content_processor instanceof JSDW_AI_Chat_Source_Content_Processor ) {
 					if ( JSDW_AI_Chat_Job_Repository::TYPE_SOURCE_CONTENT_PROCESS === $job_type ) {
 						$result = $this->content_processor->process_single( isset( $payload['source_id'] ) ? absint( $payload['source_id'] ) : 0 );

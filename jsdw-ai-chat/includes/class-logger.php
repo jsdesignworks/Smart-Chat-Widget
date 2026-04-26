@@ -103,4 +103,60 @@ class JSDW_AI_Chat_Logger {
 	public function error( $event_type, $message, $context = array() ) {
 		$this->log( 'error', $event_type, $message, $context );
 	}
+
+	/**
+	 * Recent log lines for admin diagnostics (reads DB even when file logging is off).
+	 *
+	 * @param int $limit Max rows.
+	 * @return array<int, array<string,mixed>>
+	 */
+	public function get_recent_log_rows( $limit = 30 ) {
+		global $wpdb;
+		if ( ! ( $wpdb instanceof wpdb ) ) {
+			return array();
+		}
+		$table  = $this->db->get_table_name( 'logs' );
+		$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( $exists !== $table ) {
+			return array();
+		}
+		$limit = max( 1, min( 100, absint( $limit ) ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from plugin registry.
+		$sql  = $wpdb->prepare( "SELECT id, level, event_type, message, created_at FROM {$table} ORDER BY id DESC LIMIT %d", $limit );
+		$rows = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * Recent log rows whose JSON context contains the given source_id (best-effort LIKE filter).
+	 *
+	 * @param int $source_id
+	 * @param int $limit
+	 * @return array<int, array<string,mixed>>
+	 */
+	public function get_recent_log_rows_for_source( $source_id, $limit = 10 ) {
+		global $wpdb;
+		if ( ! ( $wpdb instanceof wpdb ) ) {
+			return array();
+		}
+		$table  = $this->db->get_table_name( 'logs' );
+		$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( $exists !== $table ) {
+			return array();
+		}
+		$sid   = absint( $source_id );
+		$limit = max( 1, min( 50, absint( $limit ) ) );
+		if ( $sid <= 0 ) {
+			return array();
+		}
+		$needle = '%"source_id":' . $sid . '%';
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$sql  = $wpdb->prepare(
+			"SELECT id, level, event_type, message, created_at FROM {$table} WHERE context_json LIKE %s ORDER BY id DESC LIMIT %d",
+			$needle,
+			$limit
+		);
+		$rows = $wpdb->get_results( $sql, ARRAY_A );
+		return is_array( $rows ) ? $rows : array();
+	}
 }

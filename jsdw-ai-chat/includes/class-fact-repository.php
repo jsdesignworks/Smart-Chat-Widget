@@ -15,8 +15,29 @@ class JSDW_AI_Chat_Fact_Repository {
 	 */
 	private $db;
 
+	/**
+	 * @var bool|null
+	 */
+	private static $fulltext_facts_ok = null;
+
 	public function __construct( JSDW_AI_Chat_DB $db ) {
 		$this->db = $db;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function fact_value_fulltext_available() {
+		if ( null !== self::$fulltext_facts_ok ) {
+			return self::$fulltext_facts_ok;
+		}
+		global $wpdb;
+		$table = $this->db->get_table_name( 'facts' );
+		$key   = JSDW_AI_Chat_Knowledge_Constants::DB_FT_FACTS_KEY;
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( "SHOW INDEX FROM {$table} WHERE Key_name = '{$key}'" );
+		self::$fulltext_facts_ok = ! empty( $rows );
+		return self::$fulltext_facts_ok;
 	}
 
 	/**
@@ -113,11 +134,62 @@ class JSDW_AI_Chat_Fact_Repository {
 	 * @return array<int,array<string,mixed>>
 	 */
 	public function search_facts_value( $like_pattern, $limit = 50, $retrieval_context = JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_INTERNAL ) {
+		$term = trim( (string) $like_pattern );
+		if ( '' === $term ) {
+			return array();
+		}
+		if ( $this->fact_value_fulltext_available() && strlen( $term ) >= 3 && $this->is_safe_fulltext_query_token( $term ) ) {
+			$ft = $this->search_facts_fulltext( $term, $limit, $retrieval_context );
+			if ( ! empty( $ft ) ) {
+				return $ft;
+			}
+		}
+		return $this->search_facts_like( $term, $limit, $retrieval_context );
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function search_facts_fulltext( $term, $limit, $retrieval_context ) {
 		global $wpdb;
 		$sources = $this->db->get_table_name( 'sources' );
 		$facts   = $this->db->get_table_name( 'facts' );
 		$lim     = absint( $limit );
-		$pattern = '%' . $wpdb->esc_like( $like_pattern ) . '%';
+		$pattern = '%' . $wpdb->esc_like( $term ) . '%';
+		$vis_sql = JSDW_AI_Chat_Source_Visibility::sql_where_access_visibility( $retrieval_context );
+		$bool    = $this->boolean_fulltext_term( $term );
+		if ( '' === $bool ) {
+			return array();
+		}
+		$sql = $wpdb->prepare(
+			"SELECT f.*, s.title AS source_title, s.source_url, s.status AS source_status, s.access_visibility AS source_access_visibility
+			FROM {$facts} f
+			INNER JOIN {$sources} s ON s.id = f.source_id
+			WHERE f.is_active = 1 AND f.fact_status = %s
+			AND s.status = %s
+			{$vis_sql}
+			AND ( MATCH(f.fact_value) AGAINST (%s IN BOOLEAN MODE) OR f.fact_key LIKE %s OR s.title LIKE %s )
+			ORDER BY f.source_content_version DESC, f.id ASC
+			LIMIT {$lim}",
+			JSDW_AI_Chat_Knowledge_Constants::FACT_STATUS_ACTIVE,
+			JSDW_AI_Chat_DB::SOURCE_STATUS_ACTIVE,
+			$bool,
+			$pattern,
+			$pattern
+		);
+		$rows = $wpdb->get_results( $sql, ARRAY_A );
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function search_facts_like( $term, $limit, $retrieval_context ) {
+		global $wpdb;
+		$sources = $this->db->get_table_name( 'sources' );
+		$facts   = $this->db->get_table_name( 'facts' );
+		$lim     = absint( $limit );
+		$pattern = '%' . $wpdb->esc_like( $term ) . '%';
 		$vis_sql = JSDW_AI_Chat_Source_Visibility::sql_where_access_visibility( $retrieval_context );
 		$sql     = $wpdb->prepare(
 			"SELECT f.*, s.title AS source_title, s.source_url, s.status AS source_status, s.access_visibility AS source_access_visibility
@@ -137,6 +209,29 @@ class JSDW_AI_Chat_Fact_Repository {
 		);
 		$rows = $wpdb->get_results( $sql, ARRAY_A );
 		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * @param string $term
+	 * @return string
+	 */
+	private function boolean_fulltext_term( $term ) {
+		$w = preg_replace( '/[^\p{L}\p{N}]+/u', '', (string) $term );
+		if ( null === $w || strlen( $w ) < 2 ) {
+			return '';
+		}
+		return '+' . $w;
+	}
+
+	/**
+	 * @param string $term
+	 * @return bool
+	 */
+	private function is_safe_fulltext_query_token( $term ) {
+		if ( preg_match( '/["\'\\\\]/', (string) $term ) ) {
+			return false;
+		}
+		return (bool) preg_match( '/^[\p{L}\p{N}\s._:-]+$/u', (string) $term );
 	}
 
 	public function get_fact_by_id( $fact_id ) {

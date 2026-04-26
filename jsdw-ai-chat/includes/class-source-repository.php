@@ -102,6 +102,8 @@ class JSDW_AI_Chat_Source_Repository {
 		$record['discovery_context'] = false === $record['discovery_context'] ? '{}' : $record['discovery_context'];
 		$record['visibility_flags']  = false === $record['visibility_flags'] ? '{}' : $record['visibility_flags'];
 
+		$record = array_merge( $record, $this->eligibility_columns_from_decision( $decision, $now ) );
+
 		if ( is_array( $existing ) && isset( $existing['id'] ) ) {
 			$material_change = $this->has_material_change( $existing, $record, (string) $status );
 			if ( ! $material_change ) {
@@ -165,6 +167,127 @@ class JSDW_AI_Chat_Source_Repository {
 		}
 
 		return false;
+	}
+
+	/**
+	 * @param array<string,mixed> $decision From JSDW_AI_Chat_Source_Rules::evaluate_candidate().
+	 * @param string                $now_gmt MySQL datetime GMT.
+	 * @return array<string,mixed>
+	 */
+	private function eligibility_columns_from_decision( array $decision, $now_gmt ) {
+		if ( ! array_key_exists( 'allowed', $decision ) ) {
+			return array(
+				'eligibility'               => 'unknown',
+				'eligibility_reason_code' => null,
+				'eligibility_matched_rule'  => null,
+				'eligibility_evaluated_gmt' => null,
+			);
+		}
+		$rc = isset( $decision['reason_code'] ) ? sanitize_text_field( (string) $decision['reason_code'] ) : '';
+		$rc = '' !== $rc ? substr( $rc, 0, 100 ) : null;
+		$mr = isset( $decision['matched_rule'] ) ? sanitize_textarea_field( (string) $decision['matched_rule'] ) : '';
+		$mr = '' !== $mr ? $mr : null;
+		return array(
+			'eligibility'               => ! empty( $decision['allowed'] ) ? 'eligible' : 'ineligible',
+			'eligibility_reason_code'   => $rc,
+			'eligibility_matched_rule'  => $mr,
+			'eligibility_evaluated_gmt' => $now_gmt,
+		);
+	}
+
+	/**
+	 * Build a rules candidate array from a persisted sources row (mirrors Source_Content_Processor::build_candidate_for_rules).
+	 *
+	 * @param array<string,mixed> $row
+	 * @return array<string,mixed>
+	 */
+	public function build_candidate_from_source_row( array $row ) {
+		$type = isset( $row['source_type'] ) ? (string) $row['source_type'] : '';
+		$base = array(
+			'source_type'      => $type,
+			'source_object_id' => isset( $row['source_object_id'] ) ? absint( $row['source_object_id'] ) : null,
+			'source_key'       => isset( $row['source_key'] ) ? (string) $row['source_key'] : '',
+			'source_url'       => isset( $row['source_url'] ) ? (string) $row['source_url'] : '',
+			'title'            => isset( $row['title'] ) ? (string) $row['title'] : '',
+		);
+
+		if ( in_array( $type, array( 'post', 'page', 'cpt' ), true ) ) {
+			$pid = isset( $row['source_object_id'] ) ? absint( $row['source_object_id'] ) : 0;
+			$post = get_post( $pid );
+			if ( $post instanceof WP_Post ) {
+				$base['post_id']      = $pid;
+				$base['post_type']    = (string) $post->post_type;
+				$base['post_status']  = (string) $post->post_status;
+				$base['has_password'] = ! empty( $post->post_password );
+			}
+		}
+
+		if ( 'taxonomy' === $type && ! empty( $row['source_key'] ) && preg_match( '/^taxonomy:([^:]+):(\d+)$/', (string) $row['source_key'], $m ) ) {
+			$base['term_key'] = (string) $m[1] . ':' . (string) absint( $m[2] );
+		}
+
+		if ( 'manual' === $type && isset( $row['source_object_id'] ) ) {
+			$manual = $this->get_manual_source_by_id( absint( $row['source_object_id'] ) );
+			if ( is_array( $manual ) ) {
+				$base['manual_enabled'] = ! empty( $manual['enabled'] );
+				$base['allow_behavior'] = isset( $manual['allow_behavior'] ) ? (string) $manual['allow_behavior'] : 'allow';
+			}
+		}
+
+		return $base;
+	}
+
+	/**
+	 * @param array<string,mixed>    $row
+	 * @param JSDW_AI_Chat_Source_Rules $rules
+	 * @param array<string,mixed>   $settings
+	 */
+	/**
+	 * @param int                  $source_id
+	 * @param array<string,mixed> $decision From JSDW_AI_Chat_Source_Rules::evaluate_candidate().
+	 */
+	public function apply_eligibility_decision( $source_id, array $decision ) {
+		global $wpdb;
+		$sid = absint( $source_id );
+		if ( $sid <= 0 ) {
+			return;
+		}
+		$fields = $this->eligibility_columns_from_decision( $decision, current_time( 'mysql', true ) );
+		$table  = $this->db->get_table_name( 'sources' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->update( $table, $fields, array( 'id' => $sid ) );
+	}
+
+	public function recompute_and_store_eligibility( array $row, JSDW_AI_Chat_Source_Rules $rules, array $settings ) {
+		$sid = isset( $row['id'] ) ? absint( $row['id'] ) : 0;
+		if ( $sid <= 0 ) {
+			return;
+		}
+		$candidate = $this->build_candidate_from_source_row( $row );
+		$decision  = $rules->evaluate_candidate( $candidate, $settings );
+		$this->apply_eligibility_decision( $sid, $decision );
+	}
+
+	/**
+	 * @return int Number of rows updated.
+	 */
+	public function recompute_eligibility_batch( JSDW_AI_Chat_Source_Rules $rules, array $settings, $offset = 0, $limit = 100 ) {
+		global $wpdb;
+		$table = $this->db->get_table_name( 'sources' );
+		$off    = max( 0, absint( $offset ) );
+		$lim    = max( 1, min( 200, absint( $limit ) ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$sql = $wpdb->prepare( "SELECT * FROM {$table} ORDER BY id ASC LIMIT %d OFFSET %d", $lim, $off );
+		$rows = $wpdb->get_results( $sql, ARRAY_A );
+		if ( ! is_array( $rows ) ) {
+			return 0;
+		}
+		$n = 0;
+		foreach ( $rows as $row ) {
+			$this->recompute_and_store_eligibility( $row, $rules, $settings );
+			++$n;
+		}
+		return $n;
 	}
 
 	/**
@@ -613,5 +736,140 @@ class JSDW_AI_Chat_Source_Repository {
 		$record['created_at'] = $now;
 		$wpdb->insert( $table, $record );
 		return absint( $wpdb->insert_id );
+	}
+
+	/**
+	 * @param int $source_id
+	 * @return true|\WP_Error
+	 */
+	public function activate_inactive_source( $source_id ) {
+		global $wpdb;
+		$id = absint( $source_id );
+		if ( $id <= 0 ) {
+			return new WP_Error( 'jsdw_invalid_source', __( 'Invalid source.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		$row = $this->get_source_by_id( $id );
+		if ( ! is_array( $row ) ) {
+			return new WP_Error( 'jsdw_source_not_found', __( 'Source not found.', 'jsdw-ai-chat' ), array( 'status' => 404 ) );
+		}
+		if ( JSDW_AI_Chat_DB::SOURCE_STATUS_INACTIVE !== (string) ( $row['status'] ?? '' ) ) {
+			return new WP_Error( 'jsdw_not_inactive', __( 'Source is not inactive.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		$now   = current_time( 'mysql', true );
+		$table = $this->db->get_table_name( 'sources' );
+		$ok    = $wpdb->update(
+			$table,
+			array(
+				'status'        => JSDW_AI_Chat_DB::SOURCE_STATUS_ACTIVE,
+				'needs_reindex' => 1,
+				'change_reason' => JSDW_AI_Chat_DB::CHANGE_SOURCE_UPDATED,
+				'updated_at'    => $now,
+			),
+			array( 'id' => $id ),
+			array( '%s', '%d', '%s', '%s' ),
+			array( '%d' )
+		);
+		if ( false === $ok ) {
+			return new WP_Error( 'jsdw_source_update_failed', __( 'Could not update source.', 'jsdw-ai-chat' ), array( 'status' => 500 ) );
+		}
+		return true;
+	}
+
+	/**
+	 * Re-enable a manual source that was disabled by rules (manual row disabled).
+	 *
+	 * @param int $source_id
+	 * @return true|\WP_Error
+	 */
+	public function reenable_disabled_manual_source( $source_id ) {
+		global $wpdb;
+		$id = absint( $source_id );
+		if ( $id <= 0 ) {
+			return new WP_Error( 'jsdw_invalid_source', __( 'Invalid source.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		$row = $this->get_source_by_id( $id );
+		if ( ! is_array( $row ) ) {
+			return new WP_Error( 'jsdw_source_not_found', __( 'Source not found.', 'jsdw-ai-chat' ), array( 'status' => 404 ) );
+		}
+		if ( JSDW_AI_Chat_DB::SOURCE_STATUS_DISABLED !== (string) ( $row['status'] ?? '' ) ) {
+			return new WP_Error( 'jsdw_not_disabled', __( 'Source is not disabled.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		if ( 'manual' !== (string) ( $row['source_type'] ?? '' ) ) {
+			return new WP_Error( 'jsdw_not_manual', __( 'Only manual sources can be re-enabled this way.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		$mid = isset( $row['source_object_id'] ) ? absint( $row['source_object_id'] ) : 0;
+		if ( $mid <= 0 ) {
+			return new WP_Error( 'jsdw_manual_missing', __( 'Manual source link is missing.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		$now          = current_time( 'mysql', true );
+		$manual_table = $this->db->get_table_name( 'manual_sources' );
+		$sources_table = $this->db->get_table_name( 'sources' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->update(
+			$manual_table,
+			array(
+				'enabled'    => 1,
+				'updated_at' => $now,
+			),
+			array( 'id' => $mid ),
+			array( '%d', '%s' ),
+			array( '%d' )
+		);
+		$ok = $wpdb->update(
+			$sources_table,
+			array(
+				'status'                      => JSDW_AI_Chat_DB::SOURCE_STATUS_ACTIVE,
+				'needs_reindex'               => 1,
+				'change_reason'               => JSDW_AI_Chat_DB::CHANGE_MANUALLY_INCLUDED,
+				'content_processing_status'   => JSDW_AI_Chat_DB::CONTENT_PROC_STATUS_PENDING,
+				'knowledge_processing_status' => JSDW_AI_Chat_Knowledge_Constants::KNOWLEDGE_STATUS_PENDING,
+				'updated_at'                  => $now,
+			),
+			array( 'id' => $id ),
+			array( '%s', '%d', '%s', '%s', '%s', '%s' ),
+			array( '%d' )
+		);
+		if ( false === $ok ) {
+			return new WP_Error( 'jsdw_source_update_failed', __( 'Could not update source.', 'jsdw-ai-chat' ), array( 'status' => 500 ) );
+		}
+		return true;
+	}
+
+	/**
+	 * Admin override: mark a source active (manually included) and reset pipeline to re-run extraction.
+	 *
+	 * @param int $source_id Source row id.
+	 * @return true|\WP_Error
+	 */
+	public function manually_include_source( $source_id ) {
+		global $wpdb;
+		$id = absint( $source_id );
+		if ( $id <= 0 ) {
+			return new WP_Error( 'jsdw_invalid_source', __( 'Invalid source.', 'jsdw-ai-chat' ), array( 'status' => 400 ) );
+		}
+		$row = $this->get_source_by_id( $id );
+		if ( ! is_array( $row ) ) {
+			return new WP_Error( 'jsdw_source_not_found', __( 'Source not found.', 'jsdw-ai-chat' ), array( 'status' => 404 ) );
+		}
+		$now   = current_time( 'mysql', true );
+		$table = $this->db->get_table_name( 'sources' );
+		$ok    = $wpdb->update(
+			$table,
+			array(
+				'status'                      => JSDW_AI_Chat_DB::SOURCE_STATUS_ACTIVE,
+				'change_reason'               => JSDW_AI_Chat_DB::CHANGE_MANUALLY_INCLUDED,
+				'needs_reindex'               => 1,
+				'content_processing_status'   => JSDW_AI_Chat_DB::CONTENT_PROC_STATUS_PENDING,
+				'knowledge_processing_status' => JSDW_AI_Chat_Knowledge_Constants::KNOWLEDGE_STATUS_PENDING,
+				'updated_at'                  => $now,
+			),
+			array( 'id' => $id ),
+			array( '%s', '%s', '%d', '%s', '%s', '%s' ),
+			array( '%d' )
+		);
+		if ( false === $ok ) {
+			return new WP_Error( 'jsdw_source_update_failed', __( 'Could not update source.', 'jsdw-ai-chat' ), array( 'status' => 500 ) );
+		}
+		return true;
 	}
 }

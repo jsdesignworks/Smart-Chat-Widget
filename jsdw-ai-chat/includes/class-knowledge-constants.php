@@ -65,4 +65,40 @@ class JSDW_AI_Chat_Knowledge_Constants {
 	const RETRIEVAL_PUBLIC_SAFE = 'public_safe';
 	const RETRIEVAL_INTERNAL    = 'internal';
 	const RETRIEVAL_ADMIN_DEBUG = 'admin_debug';
+
+	// Keyword hit scoring (must stay aligned with JSDW_AI_Chat_Confidence_Policy thresholds).
+	const RETRIEVAL_SCORE_BASE           = 1.0;
+	const RETRIEVAL_SCORE_TITLE_MATCH    = 20.0;
+	const RETRIEVAL_SCORE_HEADING_MATCH  = 12.0;
+	const RETRIEVAL_SCORE_SECTION_MATCH  = 8.0;
+	const RETRIEVAL_SCORE_BODY_MATCH     = 4.0;
+	const RETRIEVAL_SCORE_FULL_PHRASE    = 6.0;
+	const RETRIEVAL_SCORE_VERSION_CAP    = 3.0;
+
+	const RETRIEVAL_FACT_BASE           = 5.0;
+	const RETRIEVAL_FACT_EXACT_BOOST    = 25.0;
+	const RETRIEVAL_FACT_PARTIAL_BOOST  = 10.0;
+	const RETRIEVAL_FACT_TITLE_ONLY_BOOST = 6.0;
+
+	// Confidence policy (same scale as retrieval scores above).
+	const CONF_THRESHOLD_STRONG           = 12.0;
+	const CONF_THRESHOLD_TITLE_ANCHOR   = 10.0;
+	const CONF_THRESHOLD_WEAK_BODY      = 4.0;
+	const CONF_THRESHOLD_SCATTER_LOW    = 15.0;
+	const CONF_THRESHOLD_SCATTER_MED    = 20.0;
+	const CONF_THRESHOLD_ONE_PER_TITLE  = 18.0;
+
+	/** Hit count alone is a weak ambiguity signal; combine with distinct sources in aggregate_hit_stats(). */
+	const RETRIEVAL_AMBIGUOUS_HIT_COUNT   = 24;
+	const RETRIEVAL_AMBIGUOUS_MIN_SOURCES = 4;
+	/** With many sources and hits, ambiguity is more meaningful when the best score is still weak. */
+	const RETRIEVAL_AMBIGUOUS_LOW_BEST    = 11.0;
+	const RETRIEVAL_AMBIGUOUS_MIN_HITS    = 10;
+
+	/** Cross-source clarification in JSDW_AI_Chat_Local_Answer_Builder when top two scores are this close. */
+	const LOCAL_ANSWER_CROSS_SOURCE_SCORE_GAP = 5.0;
+
+	/** MySQL FULLTEXT index names (see migrations + install_tables). */
+	const DB_FT_CHUNKS_KEY = 'jsdw_ft_chunks_norm';
+	const DB_FT_FACTS_KEY  = 'jsdw_ft_facts_value';
 }

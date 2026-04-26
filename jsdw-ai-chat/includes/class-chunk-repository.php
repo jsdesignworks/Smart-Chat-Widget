@@ -15,8 +15,29 @@ class JSDW_AI_Chat_Chunk_Repository {
 	 */
 	private $db;
 
+	/**
+	 * @var bool|null
+	 */
+	private static $fulltext_chunks_ok = null;
+
 	public function __construct( JSDW_AI_Chat_DB $db ) {
 		$this->db = $db;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function normalized_text_fulltext_available() {
+		if ( null !== self::$fulltext_chunks_ok ) {
+			return self::$fulltext_chunks_ok;
+		}
+		global $wpdb;
+		$table = $this->db->get_table_name( 'chunks' );
+		$key   = JSDW_AI_Chat_Knowledge_Constants::DB_FT_CHUNKS_KEY;
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from plugin registry; key is a constant slug.
+		$rows = $wpdb->get_results( "SHOW INDEX FROM {$table} WHERE Key_name = '{$key}'" );
+		self::$fulltext_chunks_ok = ! empty( $rows );
+		return self::$fulltext_chunks_ok;
 	}
 
 	/**
@@ -142,11 +163,63 @@ class JSDW_AI_Chat_Chunk_Repository {
 	 * @return array<int,array<string,mixed>>
 	 */
 	public function search_chunks_text( $like_pattern, $limit = 50, $retrieval_context = JSDW_AI_Chat_Knowledge_Constants::RETRIEVAL_INTERNAL ) {
+		$term = trim( (string) $like_pattern );
+		if ( '' === $term ) {
+			return array();
+		}
+		if ( $this->normalized_text_fulltext_available() && strlen( $term ) >= 3 && $this->is_safe_fulltext_query_token( $term ) ) {
+			$ft = $this->search_chunks_fulltext( $term, $limit, $retrieval_context );
+			if ( ! empty( $ft ) ) {
+				return $ft;
+			}
+		}
+		return $this->search_chunks_like( $term, $limit, $retrieval_context );
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function search_chunks_fulltext( $term, $limit, $retrieval_context ) {
 		global $wpdb;
 		$sources = $this->db->get_table_name( 'sources' );
 		$chunks  = $this->db->get_table_name( 'chunks' );
 		$lim     = absint( $limit );
-		$pattern = '%' . $wpdb->esc_like( $like_pattern ) . '%';
+		$pattern = '%' . $wpdb->esc_like( $term ) . '%';
+		$vis_sql = JSDW_AI_Chat_Source_Visibility::sql_where_access_visibility( $retrieval_context );
+		$bool    = $this->boolean_fulltext_term( $term );
+		if ( '' === $bool ) {
+			return array();
+		}
+		$sql = $wpdb->prepare(
+			"SELECT c.*, s.title AS source_title, s.source_url, s.status AS source_status, s.access_visibility AS source_access_visibility
+			FROM {$chunks} c
+			INNER JOIN {$sources} s ON s.id = c.source_id
+			WHERE c.is_active = 1 AND c.chunk_status = %s
+			AND s.status = %s
+			{$vis_sql}
+			AND ( MATCH(c.normalized_text) AGAINST (%s IN BOOLEAN MODE) OR c.heading LIKE %s OR c.section_label LIKE %s OR s.title LIKE %s )
+			ORDER BY c.source_content_version DESC, c.id ASC
+			LIMIT {$lim}",
+			JSDW_AI_Chat_Knowledge_Constants::CHUNK_STATUS_ACTIVE,
+			JSDW_AI_Chat_DB::SOURCE_STATUS_ACTIVE,
+			$bool,
+			$pattern,
+			$pattern,
+			$pattern
+		);
+		$rows = $wpdb->get_results( $sql, ARRAY_A );
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function search_chunks_like( $term, $limit, $retrieval_context ) {
+		global $wpdb;
+		$sources = $this->db->get_table_name( 'sources' );
+		$chunks  = $this->db->get_table_name( 'chunks' );
+		$lim     = absint( $limit );
+		$pattern = '%' . $wpdb->esc_like( $term ) . '%';
 		$vis_sql = JSDW_AI_Chat_Source_Visibility::sql_where_access_visibility( $retrieval_context );
 		$sql     = $wpdb->prepare(
 			"SELECT c.*, s.title AS source_title, s.source_url, s.status AS source_status, s.access_visibility AS source_access_visibility
@@ -167,6 +240,29 @@ class JSDW_AI_Chat_Chunk_Repository {
 		);
 		$rows = $wpdb->get_results( $sql, ARRAY_A );
 		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * @param string $term
+	 * @return string
+	 */
+	private function boolean_fulltext_term( $term ) {
+		$w = preg_replace( '/[^\p{L}\p{N}]+/u', '', (string) $term );
+		if ( null === $w || strlen( $w ) < 2 ) {
+			return '';
+		}
+		return '+' . $w;
+	}
+
+	/**
+	 * @param string $term
+	 * @return bool
+	 */
+	private function is_safe_fulltext_query_token( $term ) {
+		if ( preg_match( '/["\'\\\\]/', (string) $term ) ) {
+			return false;
+		}
+		return (bool) preg_match( '/^[\p{L}\p{N}\s._:-]+$/u', (string) $term );
 	}
 
 	/**

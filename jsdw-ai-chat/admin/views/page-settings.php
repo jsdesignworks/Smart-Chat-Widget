@@ -51,6 +51,16 @@ $jsdw_tone_labels = array(
 			<button type="submit" name="jsdw_ai_chat_settings_save" class="button button-primary" value="1"><?php echo esc_html__( 'Save settings', 'jsdw-ai-chat' ); ?></button>
 		</p>
 
+		<div class="jsdw-settings-tabs" role="tablist" aria-label="<?php echo esc_attr__( 'Settings sections', 'jsdw-ai-chat' ); ?>">
+			<button type="button" class="jsdw-settings-tab is-active" role="tab" aria-selected="true" data-tab="overview"><?php echo esc_html__( 'Overview', 'jsdw-ai-chat' ); ?></button>
+			<button type="button" class="jsdw-settings-tab" role="tab" aria-selected="false" data-tab="access"><?php echo esc_html__( 'Access & widget', 'jsdw-ai-chat' ); ?></button>
+			<button type="button" class="jsdw-settings-tab" role="tab" aria-selected="false" data-tab="ai"><?php echo esc_html__( 'AI', 'jsdw-ai-chat' ); ?></button>
+			<button type="button" class="jsdw-settings-tab" role="tab" aria-selected="false" data-tab="indexing"><?php echo esc_html__( 'Indexing', 'jsdw-ai-chat' ); ?></button>
+			<button type="button" class="jsdw-settings-tab" role="tab" aria-selected="false" data-tab="chat"><?php echo esc_html__( 'Chat & answers', 'jsdw-ai-chat' ); ?></button>
+			<button type="button" class="jsdw-settings-tab" role="tab" aria-selected="false" data-tab="maintenance"><?php echo esc_html__( 'Maintenance', 'jsdw-ai-chat' ); ?></button>
+		</div>
+
+		<div class="jsdw-settings-tab-panel is-active" data-tab="overview" role="tabpanel">
 		<div class="jsdw-card">
 			<div class="jsdw-card-header">
 				<h2><?php echo esc_html__( 'Core System', 'jsdw-ai-chat' ); ?></h2>
@@ -100,7 +110,9 @@ $jsdw_tone_labels = array(
 				</table>
 			</div>
 		</div>
+		</div>
 
+		<div class="jsdw-settings-tab-panel" data-tab="ai" role="tabpanel" hidden>
 		<div class="jsdw-card jsdw-card--ai-connection">
 			<div class="jsdw-card-header">
 				<h2><?php echo esc_html__( 'AI connection & usage', 'jsdw-ai-chat' ); ?></h2>
@@ -179,8 +191,9 @@ $jsdw_tone_labels = array(
 				</table>
 			</div>
 		</div>
+		</div>
 
-
+		<div class="jsdw-settings-tab-panel" data-tab="indexing" role="tabpanel" hidden>
 		<div class="jsdw-card">
 			<div class="jsdw-card-header">
 				<h2><?php echo esc_html__( 'Data & Processing', 'jsdw-ai-chat' ); ?></h2>
@@ -207,6 +220,17 @@ $jsdw_tone_labels = array(
 			</div>
 		</div>
 
+		<div class="jsdw-card">
+			<div class="jsdw-card-header">
+				<h2><?php echo esc_html__( 'Sources (reference)', 'jsdw-ai-chat' ); ?></h2>
+			</div>
+			<div class="jsdw-card-body">
+				<p class="description"><?php echo esc_html__( 'Detailed source-type rules, allowlists, and URL patterns are stored in settings but are not edited on this screen. Use the Source Registry and indexing tools to manage sources.', 'jsdw-ai-chat' ); ?></p>
+			</div>
+		</div>
+		</div>
+
+		<div class="jsdw-settings-tab-panel" data-tab="chat" role="tabpanel" hidden>
 		<div class="jsdw-card">
 			<div class="jsdw-card-header">
 				<h2><?php echo esc_html__( 'Chat Behavior', 'jsdw-ai-chat' ); ?></h2>
@@ -261,10 +285,24 @@ $jsdw_tone_labels = array(
 						</td>
 					</tr>
 					<tr>
+						<th scope="row"><label for="jsdw-throttle"><?php echo esc_html__( 'Query throttle (per minute)', 'jsdw-ai-chat' ); ?></label></th>
+						<td>
+							<input type="number" name="jsdw[chat][query_throttle_per_minute]" id="jsdw-throttle" value="<?php echo esc_attr( (string) ( $chat['query_throttle_per_minute'] ?? 30 ) ); ?>" min="5" max="300" class="small-text" />
+							<p class="jsdw-field-help"><?php echo esc_html__( 'Maximum chat queries per visitor per minute (keyed by IP and session). Behind a reverse proxy or CDN, many users can share one IP; raise this if legitimate traffic is throttled.', 'jsdw-ai-chat' ); ?></p>
+						</td>
+					</tr>
+					<tr>
 						<th scope="row"><?php echo esc_html__( 'Save conversation transcripts', 'jsdw-ai-chat' ); ?></th>
 						<td>
 							<label><input type="checkbox" name="jsdw[privacy][store_conversations]" value="1" <?php checked( ! empty( $privacy['store_conversations'] ) ); ?> /> <?php echo esc_html__( 'Enable', 'jsdw-ai-chat' ); ?></label>
 							<p class="jsdw-field-help"><?php echo esc_html__( 'Privacy setting: whether conversation transcripts are stored in the database.', 'jsdw-ai-chat' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php echo esc_html__( 'Visitor identity before live agent', 'jsdw-ai-chat' ); ?></th>
+						<td>
+							<label><input type="checkbox" name="jsdw[chat][require_visitor_identity_for_handoff]" value="1" <?php checked( ! empty( $chat['require_visitor_identity_for_handoff'] ) ); ?> /> <?php echo esc_html__( 'Require name and email before an admin can join as a live agent', 'jsdw-ai-chat' ); ?></label>
+							<p class="jsdw-field-help"><?php echo esc_html__( 'When enabled, visitors see a short form in the widget so your team knows who they are. Stored with the conversation; use only if your privacy policy allows.', 'jsdw-ai-chat' ); ?></p>
 						</td>
 					</tr>
 				</table>
@@ -321,7 +359,9 @@ $jsdw_tone_labels = array(
 				<p class="description"><?php echo esc_html__( 'Empty slots are omitted in the widget when allowed by design settings.', 'jsdw-ai-chat' ); ?></p>
 			</div>
 		</div>
+		</div>
 
+		<div class="jsdw-settings-tab-panel" data-tab="access" role="tabpanel" hidden>
 		<div class="jsdw-card">
 			<div class="jsdw-card-header">
 				<h2><?php echo esc_html__( 'Access & Security', 'jsdw-ai-chat' ); ?></h2>
@@ -428,7 +468,9 @@ $jsdw_tone_labels = array(
 				</table>
 			</div>
 		</div>
+		</div>
 
+		<div class="jsdw-settings-tab-panel" data-tab="maintenance" role="tabpanel" hidden>
 		<div class="jsdw-card">
 			<div class="jsdw-card-header">
 				<h2><?php echo esc_html__( 'Logging', 'jsdw-ai-chat' ); ?></h2>
@@ -482,14 +524,6 @@ $jsdw_tone_labels = array(
 				</table>
 			</div>
 		</div>
-
-		<div class="jsdw-card">
-			<div class="jsdw-card-header">
-				<h2><?php echo esc_html__( 'Sources (reference)', 'jsdw-ai-chat' ); ?></h2>
-			</div>
-			<div class="jsdw-card-body">
-				<p class="description"><?php echo esc_html__( 'Detailed source-type rules, allowlists, and URL patterns are stored in settings but are not edited on this screen. Use the Source Registry and indexing tools to manage sources.', 'jsdw-ai-chat' ); ?></p>
-			</div>
 		</div>
 
 		<p class="submit">

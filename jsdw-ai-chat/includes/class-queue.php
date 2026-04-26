@@ -79,6 +79,26 @@ class JSDW_AI_Chat_Queue {
 		);
 	}
 
+	/**
+	 * Normalize SQL GROUP BY rows from get_queue_counts_by_job_type() for admin UIs.
+	 *
+	 * @param array<int, array<string,mixed>>|mixed $rows Raw rows with job_type, status, total.
+	 * @return array{rows: array<int, array<string,mixed>>, total_jobs: int}
+	 */
+	public function normalize_queue_count_rows( $rows ) {
+		$rows       = is_array( $rows ) ? $rows : array();
+		$total_jobs = 0;
+		foreach ( $rows as $row ) {
+			if ( is_array( $row ) && isset( $row['total'] ) ) {
+				$total_jobs += absint( $row['total'] );
+			}
+		}
+		return array(
+			'rows'       => $rows,
+			'total_jobs' => $total_jobs,
+		);
+	}
+
 	public function get_status() {
 		$lock_until = (int) get_option( JSDW_AI_Chat_Cron::LOCK_OPTION_NAME, 0 );
 		return array(

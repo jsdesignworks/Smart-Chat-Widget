@@ -13,6 +13,7 @@ class JSDW_AI_Chat_Job_Repository {
 	const TYPE_SOURCE_DISCOVERY_SINGLE    = 'source_discovery_single';
 	const TYPE_SOURCE_SYNC                = 'source_sync';
 	const TYPE_SOURCE_VERIFY_MISSING      = 'source_verify_missing';
+	const TYPE_SOURCE_ELIGIBILITY_REVALIDATE = 'source_eligibility_revalidate';
 	const TYPE_SOURCE_CONTENT_PROCESS       = 'source_content_process';
 	const TYPE_SOURCE_CONTENT_PROCESS_BATCH = 'source_content_process_batch';
 	const TYPE_SOURCE_CONTENT_VERIFY        = 'source_content_verify';

@@ -339,3 +339,77 @@ body.jsdw-ai-chat-admin #wpbody-content #jsdw-design-studio-wrap .jsdw-content .
 	color: var(--jsdw-color-text-secondary, #555);
 }
 
+/* Help tips (details disclosure) */
+body.jsdw-ai-chat-admin .jsdw-help-tip {
+	display: inline-block;
+	margin: 4px 0 8px;
+	max-width: min(560px, 100%);
+	border: 1px solid var(--jsdw-color-border-card, rgba(255, 255, 255, 0.12));
+	border-radius: var(--jsdw-radius-card, 8px);
+	background: var(--jsdw-color-surface-elevated, rgba(255, 255, 255, 0.04));
+	padding: 0;
+}
+
+body.jsdw-ai-chat-admin .jsdw-help-tip__summary {
+	cursor: pointer;
+	list-style: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 12px;
+	font: var(--jsdw-type-info-key);
+	color: var(--jsdw-color-text-secondary, #6b6b7a);
+}
+
+body.jsdw-ai-chat-admin .jsdw-help-tip__summary::-webkit-details-marker {
+	display: none;
+}
+
+body.jsdw-ai-chat-admin .jsdw-help-tip__body {
+	padding: 0 12px 10px 34px;
+	font: var(--jsdw-type-info-value);
+	color: var(--jsdw-color-text-primary, #1a1528);
+}
+
+body.jsdw-ai-chat-admin .jsdw-page-lead {
+	font: var(--jsdw-type-page-subtitle);
+	margin: 0 0 16px;
+	max-width: 720px;
+}
+
+body.jsdw-ai-chat-admin .jsdw-settings-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 16px;
+	padding-bottom: 4px;
+	border-bottom: 1px solid var(--jsdw-color-border-card, rgba(255, 255, 255, 0.1));
+	overflow-x: auto;
+}
+
+body.jsdw-ai-chat-admin .jsdw-settings-tab {
+	border-radius: 999px;
+	border: 1px solid var(--jsdw-color-border-card, rgba(255, 255, 255, 0.14));
+	background: transparent;
+	padding: 6px 14px;
+	font: var(--jsdw-type-button);
+	color: var(--jsdw-color-text-secondary, #6b6b7a);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+body.jsdw-ai-chat-admin .jsdw-settings-tab.is-active {
+	background: var(--jsdw-color-action-primary, #6c63ff);
+	color: #fff;
+	border-color: transparent;
+}
+
+body.jsdw-ai-chat-admin .jsdw-shell-flash {
+	border-radius: var(--jsdw-radius-card, 8px);
+	padding: 10px 14px;
+	margin: 0 0 16px;
+	border: 1px solid rgba(74, 222, 128, 0.35);
+	background: rgba(74, 222, 128, 0.08);
+	color: var(--jsdw-color-text-primary, #1a1528);
+}
+

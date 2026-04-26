@@ -116,6 +116,10 @@ class JSDW_AI_Chat_DB {
 			knowledge_processing_reason varchar(100) DEFAULT NULL,
 			last_knowledge_processing_gmt datetime DEFAULT NULL,
 			knowledge_headings_json longtext DEFAULT NULL,
+			eligibility varchar(20) NOT NULL DEFAULT 'unknown',
+			eligibility_reason_code varchar(100) DEFAULT NULL,
+			eligibility_matched_rule text DEFAULT NULL,
+			eligibility_evaluated_gmt datetime DEFAULT NULL,
 			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY  (id),
@@ -173,7 +177,8 @@ class JSDW_AI_Chat_DB {
 			KEY source_chunk (source_id, chunk_index),
 			KEY text_hash (text_hash),
 			KEY source_ver_status (source_id, source_content_version, chunk_status),
-			KEY chunk_active (source_id, is_active)
+			KEY chunk_active (source_id, is_active),
+			FULLTEXT KEY jsdw_ft_chunks_norm (normalized_text)
 		) {$collate};";
 
 		$sql[] = "CREATE TABLE {$tables['facts']} (
@@ -194,7 +199,8 @@ class JSDW_AI_Chat_DB {
 			PRIMARY KEY  (id),
 			KEY source_fact (source_id, fact_type),
 			KEY fact_key (fact_key(100)),
-			KEY source_ver_fact (source_id, source_content_version, fact_status)
+			KEY source_ver_fact (source_id, source_content_version, fact_status),
+			FULLTEXT KEY jsdw_ft_facts_value (fact_value)
 		) {$collate};";
 
 		$sql[] = "CREATE TABLE {$tables['jobs']} (
@@ -224,6 +230,8 @@ class JSDW_AI_Chat_DB {
 			session_key varchar(191) NOT NULL,
 			user_id bigint(20) unsigned DEFAULT NULL,
 			visitor_hash varchar(64) DEFAULT NULL,
+			visitor_display_name varchar(191) DEFAULT NULL,
+			visitor_email varchar(191) DEFAULT NULL,
 			channel varchar(30) NOT NULL DEFAULT 'web',
 			status varchar(20) NOT NULL DEFAULT 'open',
 			agent_connected tinyint(1) NOT NULL DEFAULT 0,
