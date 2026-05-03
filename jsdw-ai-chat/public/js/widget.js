@@ -129,8 +129,11 @@
 			return '';
 		}
 		var status = String(result.answer_status || '');
-		if (status === 'requires_clarification' && result.clarification_question) {
-			return String(result.clarification_question);
+		if (status === 'requires_clarification') {
+			var cq = result.clarification_question != null ? String(result.clarification_question) : '';
+			if (cq.trim()) {
+				return cq;
+			}
 		}
 		return String(result.answer_text || '');
 	}
@@ -366,6 +369,7 @@
 		}
 
 		var liveAgentBanner = null;
+		var agentTypingRow = null;
 		if (mode === 'admin_disabled') {
 			var dis = document.createElement('div');
 			dis.className = 'jsdw-w-msg jsdw-w-msg-bot jsdw-w-msg-system';
@@ -380,6 +384,17 @@
 			liveAgentBanner.className = 'jsdw-w-live-agent jsdw-w-live-agent--hidden';
 			liveAgentBanner.setAttribute('role', 'status');
 			messages.appendChild(liveAgentBanner);
+
+			agentTypingRow = document.createElement('div');
+			agentTypingRow.className = 'jsdw-w-agent-typing jsdw-w-agent-typing-hidden';
+			agentTypingRow.setAttribute('aria-hidden', 'true');
+			var atl = (cfg.strings && cfg.strings.agentTyping) || 'Team member is typing…';
+			agentTypingRow.innerHTML =
+				'<span class="jsdw-w-agent-typing__dots" aria-hidden="true"><span></span><span></span><span></span></span>' +
+				'<span class="jsdw-w-agent-typing__label">' +
+				esc(atl) +
+				'</span>';
+			messages.appendChild(agentTypingRow);
 		}
 
 		messages.appendChild(typing);
@@ -560,6 +575,20 @@
 				agentPollTimer = null;
 			}
 			agentPollTickRef = null;
+			setAgentTypingVisible(false);
+		}
+
+		function setAgentTypingVisible(on) {
+			if (!agentTypingRow) {
+				return;
+			}
+			if (on) {
+				agentTypingRow.classList.remove('jsdw-w-agent-typing-hidden');
+				agentTypingRow.removeAttribute('aria-hidden');
+			} else {
+				agentTypingRow.classList.add('jsdw-w-agent-typing-hidden');
+				agentTypingRow.setAttribute('aria-hidden', 'true');
+			}
 		}
 
 		function isAgentConnected(conv) {
@@ -594,6 +623,7 @@
 				}
 				renderedAgentIds[mid] = true;
 			}
+			setAgentTypingVisible(false);
 			var el = document.createElement('div');
 			el.className = 'jsdw-w-msg jsdw-w-msg-agent';
 			el.textContent = text;
@@ -643,6 +673,9 @@
 							hideLiveAgentBanner();
 							clearPollState();
 							return;
+						}
+						if (typeof d.expecting_agent_reply === 'boolean') {
+							setAgentTypingVisible(d.expecting_agent_reply);
 						}
 						var arr = d.messages;
 						if (!Array.isArray(arr)) {
@@ -716,7 +749,11 @@
 					}
 					if (!data.agent_connected) {
 						hideLiveAgentBanner();
+						setAgentTypingVisible(false);
 						return;
+					}
+					if (typeof data.expecting_agent_reply === 'boolean') {
+						setAgentTypingVisible(data.expecting_agent_reply);
 					}
 					showLiveAgentBanner();
 					var arr = data.messages || [];
@@ -871,6 +908,7 @@
 					if (isAgentConnected(conv) && id > 0 && sk) {
 						showLiveAgentBanner();
 						startAgentPoll(id, sk);
+						setAgentTypingVisible(true);
 						window.setTimeout(function () {
 							if (typeof agentPollTickRef === 'function') {
 								agentPollTickRef();
@@ -878,13 +916,12 @@
 						}, 350);
 					} else {
 						hideLiveAgentBanner();
+						setAgentTypingVisible(false);
 					}
 					if (result && typeof result === 'object') {
+						appendAssistantBubble(result, null);
 						if (result.answer_type === LIVE_HANDOFF) {
-							updateDebugPanel(debugPanel, result);
-							dbg('live agent handoff; banner only (no duplicate assistant bubble)');
-						} else {
-							appendAssistantBubble(result, null);
+							dbg('live agent handoff response');
 						}
 					} else {
 						appendAssistantBubble(null, (cfg.strings && cfg.strings.errorResponse) || 'Error');

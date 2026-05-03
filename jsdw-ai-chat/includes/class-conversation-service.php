@@ -377,6 +377,23 @@ class JSDW_AI_Chat_Conversation_Service {
 		return $v ? absint( $v ) : 0;
 	}
 
+	/**
+	 * Role of the most recent message (for widget presence / typing hints).
+	 *
+	 * @param int $conversation_id Conversation id.
+	 * @return string Empty string if none.
+	 */
+	public function get_last_message_role( $conversation_id ) {
+		global $wpdb;
+		if ( ! ( $wpdb instanceof wpdb ) ) {
+			return '';
+		}
+		$table = $this->db->get_table_name( 'messages' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$row = $wpdb->get_var( $wpdb->prepare( "SELECT role FROM {$table} WHERE conversation_id = %d ORDER BY id DESC LIMIT 1", absint( $conversation_id ) ) );
+		return is_string( $row ) ? sanitize_key( $row ) : '';
+	}
+
 	public function add_agent_message( $conversation_id, $message ) {
 		$text = sanitize_textarea_field( (string) $message );
 		$text = substr( $text, 0, 4000 );

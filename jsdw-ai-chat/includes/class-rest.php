@@ -1051,12 +1051,16 @@ class JSDW_AI_Chat_REST {
 				'created_at'   => isset( $row['created_at'] ) ? (string) $row['created_at'] : '',
 			);
 		}
+		$last_role          = $this->conversation_service->get_last_message_role( $id );
+		$expecting_agent    = ! empty( $conv['agent_connected'] ) && 'user' === $last_role;
+
 		return rest_ensure_response(
 			array(
 				'ok'   => true,
 				'data' => array(
-					'messages'          => $out,
-					'agent_connected'   => ! empty( $conv['agent_connected'] ),
+					'messages'               => $out,
+					'agent_connected'        => ! empty( $conv['agent_connected'] ),
+					'expecting_agent_reply'  => $expecting_agent,
 				),
 			)
 		);

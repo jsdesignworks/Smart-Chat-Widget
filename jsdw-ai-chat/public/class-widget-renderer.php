@@ -191,6 +191,7 @@ class JSDW_AI_Chat_Widget_Renderer {
 					'errorNetwork'    => __( 'Could not reach the server. Please try again.', 'jsdw-ai-chat' ),
 					'errorResponse'   => __( 'Unexpected response from server.', 'jsdw-ai-chat' ),
 					'liveAgentJoined' => __( 'A team member can now reply here when they are available.', 'jsdw-ai-chat' ),
+					'agentTyping'     => __( 'Team member is typing…', 'jsdw-ai-chat' ),
 					'visitorIdentityTitle' => __( 'Before we connect you with someone', 'jsdw-ai-chat' ),
 					'visitorNameLabel'     => __( 'Your name', 'jsdw-ai-chat' ),
 					'visitorEmailLabel'    => __( 'Email', 'jsdw-ai-chat' ),
